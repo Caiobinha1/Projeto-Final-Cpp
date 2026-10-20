@@ -1,0 +1,16 @@
+# Arquivos compilados intermediarios
+*.o
+*.obj
+*.gch
+
+# Caches do Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.bak
+*~
