@@ -20,7 +20,63 @@ O **Smart Parking Controller** é um projeto de engenharia de software para sist
 
 ---
 
-## 2. Como Funcionam as Entregas do Projeto (Metodologia Prof. Eduardo Bezerra)
+## 2. Todas as Funcionalidades do Sistema
+
+Para oferecer uma visão clara e completa de toda a engenharia implementada no projeto, abaixo estão detalhadas as **9 principais funcionalidades operacionais e técnicas** do Smart Parking Controller:
+
+1. **Controle Físico de Acesso por FSM (Cancela Inteligente):**
+   - Gerencia a cancela de entrada através de uma Máquina de Estados Finitos (`FSM_Controlador`) determinística (`FECHADA`, `ABRINDO`, `ABERTA`, `FECHANDO`, `ALERTA_OBSTACULO`);
+   - Monitora eventos assíncronos: presença de veículo no laço indutivo, acionamento do botão do totem, barreira óptica antiesmagamento e temporizador de fechamento automático com tratamento de *timeout* e falhas mecânicas.
+
+2. **Fila Dinâmica de Espera (Buffer FIFO com Templates C++):**
+   - Estrutura de dados genérica `FilaEncadeada<T>` implementada do zero com alocação dinâmica em *heap* (`new`/`delete`);
+   - Gerencia a fila de espera na cancela quando o pátio atinge a capacidade máxima de vagas;
+   - Implementa construtor de cópia profunda (*Deep Copy*), operador de atribuição (`operator=`) e destrutor para assegurar o ciclo de vida sob o paradigma RAII (*Resource Acquisition Is Initialization*), impedindo vazamentos de memória.
+
+3. **Alocação Inteligente de Vagas Físicas no Pátio:**
+   - O pátio possui 10 vagas físicas numeradas (índices 0 a 9) gerenciadas por um vetor polimórfico de ponteiros `Veiculo* vagas[10]`;
+   - **Vagas Simples:** Carros e motos ocupam 1 vaga individual;
+   - **Vagas Contíguas Duplas:** Caminhões exigem e alocam automaticamente **duas vagas livres consecutivas lado a lado** (ex: vagas 3 e 4). Na saída, ambas as vagas são liberadas simultaneamente.
+
+4. **Cálculo de Tarifas 100% Polimórfico (Sem `switch/case`):**
+   - Elimina verificações condicionais procedurais, utilizando classes derivadas com *late binding* via tabela de ponteiros de funções virtuais (*vtable*):
+     - **Tolerância Geral:** Permanências de até 15 minutos são isentas de cobrança para qualquer categoria de veículo;
+     - **Carro:** Tarifa base de R$ 10,00/hora. Veículos com tag eletrônica (Sem Parar/ConectCar) recebem **10% de desconto automático**;
+     - **Moto:** Tarifa base de R$ 5,00/hora. Motos de alta cilindrada (> 300cc) possuem **adicional de 20%** por porte e taxa de seguro de vaga;
+     - **Caminhão:** Tarifa base de R$ 20,00/hora multiplicada pelo número de eixos e proporcional às vagas ocupadas.
+
+5. **Emissão de Tíquetes e Registro de Saída:**
+   - Ao passar pela cancela, o sistema emite um tíquete com identificador sequencial único, placa do veículo, categoria e horário de entrada em minutos;
+   - No momento do pagamento e saída, o sistema valida o tíquete, calcula o tempo total de permanência e computa a tarifa devida de acordo com as regras polimórficas do veículo.
+
+6. **Tratamento de Exceções Operacionais com Hierarquia Própria:**
+   - Hierarquia customizada de tratamento de erros baseada em `std::exception`:
+     - `EstacionamentoLotadoException`: disparada ao tentar estacionar com pátio cheio e fila externa esgotada;
+     - `FilaVaziaException`: disparada ao tentar desenfileirar sem veículos aguardando;
+     - `TiqueteInvalidoException`: disparada ao tentar registrar saída com tíquete nulo ou inexistente.
+   - Previne travamentos e garante a integridade dos dados mesmo sob condições operacionais adversas.
+
+7. **Relatório Gerencial e Fechamento Financeiro em Tempo Real:**
+   - Monitoramento contínuo da operação com métricas instantâneas:
+     - Total de vagas livres e ocupadas;
+     - Quantidade de veículos na fila de espera externa;
+     - Contagem histórica de veículos atendidos por categoria (carros, motos e caminhões);
+     - Receita financeira total acumulada (R$) e faturamento discriminado.
+   - Impressão formatada em console através da sobrecarga do operador `<<` (`std::ostream& operator<<`).
+
+8. **Simulador Gráfico Interativo com IPC em Tempo Real:**
+   - Interface visual desktop em Python/Tkinter ([`simulador_visual.py`](./simulador_visual.py)) com renderização gráfica do pátio e das 10 vagas coloridas por status e categoria do veículo;
+   - Comunicação bidirecional via Pipes (`stdin`/`stdout`) com o binário compilado em C++ (`smart_parking.exe`), garantindo que **toda a lógica de negócios, regras e cálculos sejam executados estritamente pelo código C++**;
+   - Permite acelerar o tempo do relógio da simulação, injetar veículos e testar todas as transições de estados da cancela interativamente.
+
+9. **Firmware e Projeto Físico de Hardware Embarcado:**
+   - Projeto prático para implementação física com microcontrolador Arduino Uno ou ESP32;
+   - Integração com servo motor SG90 (cancela física), sensor ultrassônico HC-SR04 (laço indutivo), sensor infravermelho de obstáculo (fotocélula antiesmagamento), LEDs de sinalização e display LCD I2C para mensagens ao motorista;
+   - Código firmware pronto ([`firmware_arduino_cancela.ino`](./Implementacao_Fisica_Hardware/firmware_arduino_cancela.ino)) e esquemático elétrico pino a pino disponível na pasta de hardware.
+
+---
+
+## 3. Como Funcionam as Entregas do Projeto (Metodologia Prof. Eduardo Bezerra)
 
 Conforme as diretrizes pedagógicas da disciplina e as orientações encaminhadas pelo docente, a segunda metade do semestre é estruturada no formato de **laboratório prático de desenvolvimento assistido**, no qual o projeto é avaliado de forma contínua em **4 etapas cumulativas**:
 
@@ -57,7 +113,7 @@ Na programação procedural clássica (C estruturado), sistemas desse porte depe
 
 ---
 
-## 3. Estrutura de Diretórios do Projeto
+## 4. Estrutura de Diretórios do Projeto
 
 ```
 .
@@ -111,7 +167,7 @@ Na programação procedural clássica (C estruturado), sistemas desse porte depe
 
 ---
 
-## 4. Relatórios Técnicos em PDF
+## 5. Relatórios Técnicos em PDF
 
 Cada entrega possui seu respectivo relatório técnico formal gerado em PDF, pronto para entrega no Moodle ou impressão:
 
@@ -124,7 +180,7 @@ Cada entrega possui seu respectivo relatório técnico formal gerado em PDF, pro
 
 ---
 
-## 5. Simulador Visual Interativo (Testador Gráfico / Jogo)
+## 6. Simulador Visual Interativo (Testador Gráfico / Jogo)
 
 Para facilitar a validação, demonstração ao professor e testes visuais com sua dupla, foi criado o script [`simulador_visual.py`](./simulador_visual.py).
 
@@ -148,7 +204,7 @@ python simulador_visual.py
 
 ---
 
-## 6. Instruções de Compilação e Execução dos Códigos C++
+## 7. Instruções de Compilação e Execução dos Códigos C++
 
 Todos os programas foram desenvolvidos para compilação com `g++ (GCC)` sob padrão `C++11`:
 
@@ -184,7 +240,7 @@ g++ -std=c++11 -Wall src/FSM_Controlador.cpp src/Veiculo.cpp src/Carro.cpp src/M
 
 ---
 
-## 7. Status e Validação dos Testes
+## 8. Status e Validação dos Testes
 
 | Módulo / Entrega | Compilador | Advertências / Erros | Testes Automatizados | Gerenciamento de Memória |
 | :--- | :---: | :---: | :---: | :---: |
