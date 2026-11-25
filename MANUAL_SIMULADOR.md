@@ -10,23 +10,22 @@
 
 O simulador [`simulador_visual.py`](./simulador_visual.py) é uma interface gráfica 2D interativa em **pixel art** (desenvolvida em Python 3 com `tkinter` nativo, sem dependências externas) que funciona como um jogo de gerenciamento de estacionamento (*Smart Parking Tycoon*).
 
-Toda a lógica do sistema — máquina de estados da cancela (FSM), fila encadeada genérica (`FilaEncadeada<T>`), alocação de vagas, cálculo tarifário polimórfico (*vtable*), relógio/calendário (`RelogioCalendario`), camada de hardware (HAL), estatísticas STL, exceções e exportação de arquivos — **é executada em tempo real pelo binário C++11 compilado** (`EntregaFinal_Sistema_Completo/bin/smart_parking.exe`), conectado por *Pipe IPC* (`stdin`/`stdout`).
+Toda a lógica do sistema — máquina de estados da cancela (FSM), fila encadeada genérica (`FilaEncadeada<T>`), alocação de vagas, cálculo tarifário polimórfico (*vtable*), relógio/calendário (`RelogioCalendario`), camada de hardware (HAL), estatísticas STL, exceções e exportação de arquivos — **é executada em tempo real pelo binário C++11 compilado** (`sistema_completo/bin/smart_parking.exe`), conectado por *Pipe IPC* (`stdin`/`stdout`).
 
 ---
 
-## 2. Pré-requisitos e Execução
+## 2. Como Abrir o Simulador
 
-1. **Python 3** instalado (com `tkinter`, já incluso na instalação padrão do Python no Windows/macOS).
-2. **Executável C++ compilado** em `EntregaFinal_Sistema_Completo/bin/smart_parking.exe` (já incluído e compilado estaticamente com `-static`).
-   - Caso altere algum arquivo `.cpp`/`.h`, basta recompilar na raiz do projeto com:
-     ```bash
-     mingw32-make final
-     ```
-     *(ou `make final` no Linux/macOS)*
-3. **Abrir o simulador** (na pasta raiz do repositório):
-   ```bash
-   python simulador_visual.py
-   ```
+- **No Windows (mais rápido):** dê **duplo clique em [`Jogar_Simulador.bat`](./Jogar_Simulador.bat)** na pasta raiz do projeto.
+- **Via terminal (Windows / Linux / macOS):**
+  ```bash
+  python simulador_visual.py
+  ```
+- **Pré-requisitos:** Python 3 instalado (com `tkinter`, já incluso no instalador padrão). O binário `sistema_completo/bin/smart_parking.exe` já vem compilado estaticamente (`-static`). Caso altere o código C++, recompile com:
+  ```bash
+  mingw32-make sistema   # Windows
+  make sistema           # Linux / macOS
+  ```
 
 ---
 

@@ -14,7 +14,7 @@ int main() {
     cout << "========================================================\n";
     cout << "  UFSC / CTC / EEL - EEL7323 Programacao C++ Embarcada  \n";
     cout << "  PROJETO FINAL - SMART PARKING CONTROLLER              \n";
-    cout << "  SUITE DE TESTES: ENTREGA 1 (MAQUINA DE ESTADOS - FSM) \n";
+    cout << "  SUITE DE TESTES: MODULO 1 (MAQUINA DE ESTADOS - FSM)  \n";
     cout << "========================================================\n\n";
 
     FSM_Controlador fsm;
@@ -100,7 +100,7 @@ int main() {
     cout << "  -> Desistencia tratada com retorno ao estado LIVRE! [SUCESSO]\n\n";
 
     cout << "========================================================\n";
-    cout << "  RESULTADO FINAL ENTREGA 1: 100% DOS TESTES PASSARAM!  \n";
+    cout << "  RESULTADO FINAL MODULO 1: 100% DOS TESTES PASSARAM!   \n";
     cout << "  Total de passagens com sucesso: " << fsm.getTotalPassagensSucesso() << "\n";
     cout << "  Total de alertas gerenciados: " << fsm.getTotalAlertas() << "\n";
     cout << "========================================================\n";

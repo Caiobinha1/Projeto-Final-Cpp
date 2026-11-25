@@ -121,7 +121,7 @@ O \textbf{Smart Parking Controller} modela um estacionamento de 10 vagas com can
 \section{Materiais e Métodos}
 % ==============================================================================
 
-O projeto está organizado em três módulos isolados testáveis individualmente (\code{Entrega1} a \code{Entrega3}) e no sistema consolidado (\code{EntregaFinal\_Sistema\_Completo/}), todos compiláveis via \code{Makefile} com GCC/MinGW-w64 (\code{g++}):
+O projeto está organizado em três blocos modulares testáveis isoladamente (\code{modulos/01\_fsm\_cancela}, \code{02\_fila\_template\_excecoes} e \code{03\_polimorfismo\_tarifas}) e no sistema consolidado (\code{sistema\_completo/}), todos compiláveis via \code{Makefile} com GCC/MinGW-w64 (\code{g++}):
 
 \begin{lstlisting}[language=bash, numbers=none, float=ht, caption={Compilação do sistema completo (Linux/Windows).}]
 g++ -std=c++11 -Wall -Wextra -Wpedantic -O2 -pthread \
@@ -130,7 +130,7 @@ g++ -std=c++11 -Wall -Wextra -Wpedantic -O2 -pthread \
     src/Estacionamento.cpp src/main.cpp -o bin/smart_parking
 \end{lstlisting}
 
-No Windows, \code{-static} gera executáveis autocontidos. Para demonstração interativa, o simulador 2D em \textit{pixel art} (\code{simulador\_visual.py}, detalhado em \code{MANUAL\_SIMULADOR.md}) comunica-se com o binário C++ via \textit{pipes} (\code{stdin}/\code{stdout}). O código-fonte, testes e documentação estão em \url{https://github.com/Caiobinha1/Projeto-Final-Cpp}.
+No Windows, \code{-static} gera executáveis autocontidos. Para demonstração interativa, o simulador 2D em \textit{pixel art} (\code{simulador\_visual.py}, iniciado por duplo clique em \code{Jogar\_Simulador.bat} e detalhado em \code{MANUAL\_SIMULADOR.md}) comunica-se com o binário C++ via \textit{pipes} (\code{stdin}/\code{stdout}). O código-fonte, testes e documentação estão em \url{https://github.com/Caiobinha1/Projeto-Final-Cpp}.
 
 A Tabela~\ref{tab:rastreabilidade} resume o mapeamento direto entre os tópicos da disciplina e sua implementação no projeto.
 
@@ -459,10 +459,10 @@ A compilação via \code{Makefile} com \code{-std=c++11 -Wall -Wextra -Wpedantic
 \toprule
 \textbf{Módulo / Suíte} & \textbf{Warnings} & \textbf{Resultado} \\
 \midrule
-Entrega 1 -- \code{FSM\_Controlador} (5 testes) & 0 & 100\% Aprovado \\
-Entrega 2 -- \code{FilaEncadeada<T>} (5 testes) & 0 & 100\% Aprovado \\
-Entrega 3 -- Polimorfismo/Tarifas (5 testes) & 0 & 100\% Aprovado \\
-Entrega Final -- Integrado (10 suítes) & 0 & 100\% Aprovado \\
+Bloco 1 -- \code{FSM\_Controlador} (5 testes) & 0 & 100\% Aprovado \\
+Bloco 2 -- \code{FilaEncadeada<T>} (5 testes) & 0 & 100\% Aprovado \\
+Bloco 3 -- Polimorfismo/Tarifas (5 testes) & 0 & 100\% Aprovado \\
+Sistema Completo -- Integrado (10 suítes) & 0 & 100\% Aprovado \\
 Teste End-to-End Pipe IPC + JSON & 0 & 100\% Aprovado \\
 \bottomrule
 \end{tabular}%

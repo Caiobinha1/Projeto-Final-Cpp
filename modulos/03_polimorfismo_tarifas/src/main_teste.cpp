@@ -13,7 +13,7 @@ int main() {
     cout << "========================================================\n";
     cout << "  UFSC / CTC / EEL - EEL7323 Programacao C++ Embarcada  \n";
     cout << "  PROJETO FINAL - SMART PARKING CONTROLLER              \n";
-    cout << "  SUITE DE TESTES: ENTREGA 3 (POLIMORFISMO & TARIFAS)   \n";
+    cout << "  SUITE DE TESTES: MODULO 3 (POLIMORFISMO & TARIFAS)    \n";
     cout << "========================================================\n\n";
 
     // Teste 1: Instanciação Polimórfica com Vetor de Ponteiros da Classe Base
@@ -80,7 +80,7 @@ int main() {
     cout << "  -> Todos os objetos liberados deterministicamente (RAII)! [SUCESSO]\n\n";
 
     cout << "========================================================\n";
-    cout << "  RESULTADO FINAL ENTREGA 3: 100% DOS TESTES PASSARAM!  \n";
+    cout << "  RESULTADO FINAL MODULO 3: 100% DOS TESTES PASSARAM!   \n";
     cout << "  Polimorfismo, late binding e tarifas validados!       \n";
     cout << "========================================================\n";
 

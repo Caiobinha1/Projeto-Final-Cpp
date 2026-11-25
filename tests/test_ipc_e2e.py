@@ -28,7 +28,7 @@ def get_status(proc):
 def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     exe_name = "smart_parking.exe" if os.name == "nt" else "smart_parking"
-    exe_path = os.path.join(root, "EntregaFinal_Sistema_Completo", "bin", exe_name)
+    exe_path = os.path.join(root, "sistema_completo", "bin", exe_name)
     assert os.path.exists(exe_path), f"Executavel nao encontrado: {exe_path}"
 
     proc = subprocess.Popen(

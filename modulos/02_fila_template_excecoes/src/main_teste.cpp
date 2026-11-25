@@ -29,7 +29,7 @@ int main() {
     cout << "========================================================\n";
     cout << "  UFSC / CTC / EEL - EEL7323 Programacao C++ Embarcada  \n";
     cout << "  PROJETO FINAL - SMART PARKING CONTROLLER              \n";
-    cout << "  SUITE DE TESTES: ENTREGA 2 (ESTRUTURAS & TEMPLATES)   \n";
+    cout << "  SUITE DE TESTES: MODULO 2 (ESTRUTURAS & TEMPLATES)    \n";
     cout << "========================================================\n\n";
 
     // Teste 1: Fila Encadeada de inteiros (FIFO)
@@ -136,7 +136,7 @@ int main() {
     cout << "  -> Estresse concluido sem vazamentos de memoria! [SUCESSO]\n\n";
 
     cout << "========================================================\n";
-    cout << "  RESULTADO FINAL ENTREGA 2: 100% DOS TESTES PASSARAM!  \n";
+    cout << "  RESULTADO FINAL MODULO 2: 100% DOS TESTES PASSARAM!   \n";
     cout << "  Todas as estruturas dinamicas e excecoes estao OK!    \n";
     cout << "========================================================\n";
 

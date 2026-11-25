@@ -10,53 +10,53 @@ else
 	STATIC_FLAGS :=
 endif
 
-FINAL_DIR := EntregaFinal_Sistema_Completo
-FINAL_SRCS := \
-	$(FINAL_DIR)/src/FSM_Controlador.cpp \
-	$(FINAL_DIR)/src/Veiculo.cpp \
-	$(FINAL_DIR)/src/Carro.cpp \
-	$(FINAL_DIR)/src/Moto.cpp \
-	$(FINAL_DIR)/src/Caminhao.cpp \
-	$(FINAL_DIR)/src/RelogioCalendario.cpp \
-	$(FINAL_DIR)/src/Estacionamento.cpp \
-	$(FINAL_DIR)/src/main.cpp
+SISTEMA_DIR := sistema_completo
+SISTEMA_SRCS := \
+	$(SISTEMA_DIR)/src/FSM_Controlador.cpp \
+	$(SISTEMA_DIR)/src/Veiculo.cpp \
+	$(SISTEMA_DIR)/src/Carro.cpp \
+	$(SISTEMA_DIR)/src/Moto.cpp \
+	$(SISTEMA_DIR)/src/Caminhao.cpp \
+	$(SISTEMA_DIR)/src/RelogioCalendario.cpp \
+	$(SISTEMA_DIR)/src/Estacionamento.cpp \
+	$(SISTEMA_DIR)/src/main.cpp
 
-.PHONY: all entrega1 entrega2 entrega3 final test clean
+.PHONY: all modulo1 modulo2 modulo3 sistema test clean
 
-all: entrega1 entrega2 entrega3 final
+all: modulo1 modulo2 modulo3 sistema
 
-entrega1:
+modulo1:
 	$(CXX) $(CXXFLAGS) $(STATIC_FLAGS) \
-		Entrega1_FSM_Modelagem/src/FSM_Controlador.cpp \
-		Entrega1_FSM_Modelagem/src/main_entrega1.cpp \
-		-o Entrega1_FSM_Modelagem/bin/entrega1$(EXE)
+		modulos/01_fsm_cancela/src/FSM_Controlador.cpp \
+		modulos/01_fsm_cancela/src/main_teste.cpp \
+		-o modulos/01_fsm_cancela/bin/teste_fsm$(EXE)
 
-entrega2:
+modulo2:
 	$(CXX) $(CXXFLAGS) $(STATIC_FLAGS) \
-		Entrega2_Estruturas_Dados/src/main_entrega2.cpp \
-		-o Entrega2_Estruturas_Dados/bin/entrega2$(EXE)
+		modulos/02_fila_template_excecoes/src/main_teste.cpp \
+		-o modulos/02_fila_template_excecoes/bin/teste_fila$(EXE)
 
-entrega3:
+modulo3:
 	$(CXX) $(CXXFLAGS) $(STATIC_FLAGS) \
-		Entrega3_Polimorfismo_Tarifas/src/Veiculo.cpp \
-		Entrega3_Polimorfismo_Tarifas/src/Carro.cpp \
-		Entrega3_Polimorfismo_Tarifas/src/Moto.cpp \
-		Entrega3_Polimorfismo_Tarifas/src/Caminhao.cpp \
-		Entrega3_Polimorfismo_Tarifas/src/main_entrega3.cpp \
-		-o Entrega3_Polimorfismo_Tarifas/bin/entrega3$(EXE)
+		modulos/03_polimorfismo_tarifas/src/Veiculo.cpp \
+		modulos/03_polimorfismo_tarifas/src/Carro.cpp \
+		modulos/03_polimorfismo_tarifas/src/Moto.cpp \
+		modulos/03_polimorfismo_tarifas/src/Caminhao.cpp \
+		modulos/03_polimorfismo_tarifas/src/main_teste.cpp \
+		-o modulos/03_polimorfismo_tarifas/bin/teste_polimorfismo$(EXE)
 
-final:
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(STATIC_FLAGS) $(FINAL_SRCS) \
-		-o $(FINAL_DIR)/bin/smart_parking$(EXE)
+sistema:
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(STATIC_FLAGS) $(SISTEMA_SRCS) \
+		-o $(SISTEMA_DIR)/bin/smart_parking$(EXE)
 
 test: all
-	./Entrega1_FSM_Modelagem/bin/entrega1$(EXE)
-	./Entrega2_Estruturas_Dados/bin/entrega2$(EXE)
-	./Entrega3_Polimorfismo_Tarifas/bin/entrega3$(EXE)
-	./$(FINAL_DIR)/bin/smart_parking$(EXE)
+	./modulos/01_fsm_cancela/bin/teste_fsm$(EXE)
+	./modulos/02_fila_template_excecoes/bin/teste_fila$(EXE)
+	./modulos/03_polimorfismo_tarifas/bin/teste_polimorfismo$(EXE)
+	./$(SISTEMA_DIR)/bin/smart_parking$(EXE)
 
 clean:
-	rm -f Entrega1_FSM_Modelagem/bin/entrega1$(EXE) \
-	      Entrega2_Estruturas_Dados/bin/entrega2$(EXE) \
-	      Entrega3_Polimorfismo_Tarifas/bin/entrega3$(EXE) \
-	      $(FINAL_DIR)/bin/smart_parking$(EXE)
+	rm -f modulos/01_fsm_cancela/bin/teste_fsm$(EXE) \
+	      modulos/02_fila_template_excecoes/bin/teste_fila$(EXE) \
+	      modulos/03_polimorfismo_tarifas/bin/teste_polimorfismo$(EXE) \
+	      $(SISTEMA_DIR)/bin/smart_parking$(EXE)

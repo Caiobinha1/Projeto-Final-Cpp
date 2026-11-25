@@ -7,7 +7,7 @@ Autores: Caio Missfeld Carlos e Fabio Augusto Dittrich
 
 Interface grafica 2D com sprites em pixel art (100% Python + Tkinter nativo,
 sem dependencias externas) conectada em tempo real via Pipe IPC ao motor C++11
-compilado (EntregaFinal_Sistema_Completo/bin/smart_parking.exe).
+compilado (sistema_completo/bin/smart_parking.exe).
 
 Toda a regra de negocio (FSM da cancela, FilaEncadeada<T>, polimorfismo de
 tarifas, heranca multipla RelogioCalendario, HAL, STL, arquivos fstream e
@@ -278,12 +278,18 @@ class SmartParkingGame(tk.Tk):
     # ==========================================================================
     def iniciar_motor_cpp(self):
         try:
-            self.engine_proc = subprocess.Popen(
-                [self.exe_path, "--pipe"],
+            popen_kwargs = dict(
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 text=True,
                 bufsize=1,
+            )
+            if os.name == "nt" and hasattr(subprocess, "CREATE_NO_WINDOW"):
+                popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+            self.engine_proc = subprocess.Popen(
+                [self.exe_path, "--pipe"],
+                **popen_kwargs,
             )
             banner = self.engine_proc.stdout.readline().strip()
             if banner != "SMART_PARKING_ENGINE_ONLINE":
@@ -295,7 +301,7 @@ class SmartParkingGame(tk.Tk):
             messagebox.showerror(
                 "Erro ao Iniciar Motor C++",
                 f"Nao foi possivel iniciar o executavel C++ em:\n{self.exe_path}\n\nErro: {e}\n\n"
-                "Compile o projeto com 'make final' ou via g++ antes de abrir o simulador.",
+                "Compile o projeto com 'make sistema' ou via g++ antes de abrir o simulador.",
             )
             self.destroy()
             return False
@@ -1152,10 +1158,10 @@ class SmartParkingGame(tk.Tk):
 if __name__ == "__main__":
     diretorio_atual = os.path.dirname(os.path.abspath(__file__))
     exe_name = "smart_parking.exe" if os.name == "nt" else "smart_parking"
-    caminho_exe = os.path.join(diretorio_atual, "EntregaFinal_Sistema_Completo", "bin", exe_name)
+    caminho_exe = os.path.join(diretorio_atual, "sistema_completo", "bin", exe_name)
 
     if not os.path.exists(caminho_exe):
-        caminho_exe = os.path.abspath(os.path.join("EntregaFinal_Sistema_Completo", "bin", exe_name))
+        caminho_exe = os.path.abspath(os.path.join("sistema_completo", "bin", exe_name))
 
     app = SmartParkingGame(caminho_exe)
     if app.engine_proc is not None:

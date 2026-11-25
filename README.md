@@ -11,7 +11,7 @@
 
 ## Visão Geral
 
-Controlador de estacionamento de 10 vagas em **C++11** orientado a objetos, acompanhado de um simulador interativo 2D em pixel art ([`simulador_visual.py`](./simulador_visual.py)) conectado diretamente ao executável C++ via *Pipe IPC* (`stdin`/`stdout`).
+Controlador de estacionamento de 10 vagas em **C++11** orientado a objetos, organizado em **módulos isolados testáveis** e integrado no **sistema completo**, acompanhado de um simulador interativo 2D em pixel art ([`simulador_visual.py`](./simulador_visual.py)) conectado ao executável C++ via *Pipe IPC* (`stdin`/`stdout`).
 
 ### Conteúdos da Disciplina Aplicados
 | Conceito | Implementação |
@@ -32,52 +32,37 @@ Controlador de estacionamento de 10 vagas em **C++11** orientado a objetos, acom
 
 ```
 .
+├── Jogar_Simulador.bat                 # Duplo clique no Windows para abrir o simulador 2D
 ├── Relatorio_Final_Smart_Parking.pdf   # Relatório técnico final (PDF)
-├── Relatorio_Final_LaTeX/              # Fontes LaTeX (main.tex, references.bib)
+├── relatorio_latex/                    # Fontes LaTeX (main.tex, references.bib)
 ├── MANUAL_SIMULADOR.md                 # Guia rápido do simulador 2D
 ├── Makefile                            # Compilação e testes de todos os blocos
 ├── simulador_visual.py                 # Simulador 2D pixel-art (Python/Tkinter + IPC)
-├── Entrega1_FSM_Modelagem/             # Bloco 1: FSM isolada (include, src, bin)
-├── Entrega2_Estruturas_Dados/          # Bloco 2: FilaEncadeada<T> e exceções
-├── Entrega3_Polimorfismo_Tarifas/      # Bloco 3: Hierarquia Veiculo e tarifas
-├── EntregaFinal_Sistema_Completo/      # Projeto completo integrado
+├── modulos/
+│   ├── 01_fsm_cancela/                 # Bloco 1: FSM da cancela (include, src, bin)
+│   ├── 02_fila_template_excecoes/      # Bloco 2: FilaEncadeada<T> e exceções
+│   └── 03_polimorfismo_tarifas/        # Bloco 3: Hierarquia Veiculo e tarifas
+├── sistema_completo/                   # Projeto final integrado (include, src, bin)
 └── tests/test_ipc_e2e.py               # Teste end-to-end do protocolo Pipe IPC
 ```
 
 ---
 
-## Como Compilar e Testar
+## Como Rodar e Testar
 
-### 1. Rodar o Simulador 2D Interativo (recomendado)
-```bash
-python simulador_visual.py
-```
-*(No Windows, `EntregaFinal_Sistema_Completo/bin/smart_parking.exe` já está compilado com `-static`. Em Linux/macOS, compile primeiro com `make final`.)*
+### 1. Abrir o Simulador 2D (Jogo Interativo)
+- **Windows:** dê **duplo clique** em **`Jogar_Simulador.bat`** (ou rode `python simulador_visual.py`).
+- **Linux / macOS:** compile com `make sistema` e rode `python3 simulador_visual.py`.
 
-### 2. Compilar e Testar Tudo via `Makefile`
+### 2. Compilar e Testar Todos os Blocos + Sistema Completo
 ```bash
 make test          # Linux / macOS
 mingw32-make test  # Windows (MinGW-w64)
 ```
 
-### 3. Compilar e Rodar Cada Bloco Separadamente (`g++` C++11)
-- **Sistema Completo (10 suítes integradas):**
-  ```bash
-  make final && ./EntregaFinal_Sistema_Completo/bin/smart_parking
-  ```
-- **Bloco 1 – FSM:**
-  ```bash
-  make entrega1 && ./Entrega1_FSM_Modelagem/bin/entrega1
-  ```
-- **Bloco 2 – Fila Template e Exceções:**
-  ```bash
-  make entrega2 && ./Entrega2_Estruturas_Dados/bin/entrega2
-  ```
-- **Bloco 3 – Polimorfismo e Tarifas:**
-  ```bash
-  make entrega3 && ./Entrega3_Polimorfismo_Tarifas/bin/entrega3
-  ```
-- **Teste End-to-End do Pipe IPC:**
-  ```bash
-  python tests/test_ipc_e2e.py
-  ```
+### 3. Testar Cada Bloco Separadamente
+- **Bloco 1 – FSM da Cancela:** `make modulo1 && ./modulos/01_fsm_cancela/bin/teste_fsm`
+- **Bloco 2 – Fila Template e Exceções:** `make modulo2 && ./modulos/02_fila_template_excecoes/bin/teste_fila`
+- **Bloco 3 – Polimorfismo e Tarifas:** `make modulo3 && ./modulos/03_polimorfismo_tarifas/bin/teste_polimorfismo`
+- **Sistema Completo (10 suítes integradas):** `make sistema && ./sistema_completo/bin/smart_parking`
+- **Teste End-to-End do Pipe IPC:** `python tests/test_ipc_e2e.py`
