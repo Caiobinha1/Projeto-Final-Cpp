@@ -1,7 +1,8 @@
 #include "../include/Caminhao.h"
+#include "../include/UtilitariosTemplate.h"
 
 Caminhao::Caminhao(const std::string& p, const std::string& m, int entrada, int eixos)
-    : Veiculo(p, m, entrada), numeroEixos(eixos < 2 ? 2 : eixos) {}
+    : Veiculo(p, m, entrada), numeroEixos(limitarIntervalo(eixos, 2, 9)) {}
 
 double Caminhao::calcularTarifa(int minutosPermanencia) const {
     if (minutosPermanencia <= 15) {

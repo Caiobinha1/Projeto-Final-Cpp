@@ -6,9 +6,9 @@
 
 /**
  * @brief Classe base abstrata representando um veículo no estacionamento.
- * 
+ *
  * Demonstra os conceitos de:
- * 1. Classe Abstrata (métodos virtuais puros);
+ * 1. Classe Abstrata (métodos virtuais puros = 0);
  * 2. Destrutor Virtual para desalocação polimórfica correta;
  * 3. Membros protegidos (protected) herdados pelas subclasses;
  * 4. Sobrecarga de operadores com função friend.
@@ -17,21 +17,22 @@ class Veiculo {
 protected:
     std::string placa;
     std::string modelo;
-    int minutoEntrada; // Minutos desde 00:00 (ex: 10:30 = 630 min)
+    int minutoEntrada; // Minutos acumulados desde 00:00 (ex: 10:30 = 630 min)
 
 public:
     Veiculo(const std::string& p, const std::string& m, int entrada);
     virtual ~Veiculo() = default; // Destrutor virtual essencial
 
-    // Métodos virtuais puros (Polimorfismo dinâmico)
+    // Métodos virtuais puros (Polimorfismo dinâmico via vtable)
     virtual double calcularTarifa(int minutosPermanencia) const = 0;
     virtual std::string getTipo() const = 0;
     virtual int getVagasNecessarias() const = 0;
 
-    // Métodos concretos de consulta
-    std::string getPlaca() const { return placa; }
-    std::string getModelo() const { return modelo; }
+    // Métodos concretos de consulta e ajuste de entrada
+    const std::string& getPlaca() const { return placa; }
+    const std::string& getModelo() const { return modelo; }
     int getMinutoEntrada() const { return minutoEntrada; }
+    void setMinutoEntrada(int entrada) { minutoEntrada = entrada; }
 
     // Sobrecarga de operador com friend para exibição formatada
     friend std::ostream& operator<<(std::ostream& os, const Veiculo& v);

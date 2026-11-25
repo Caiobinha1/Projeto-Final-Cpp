@@ -8,9 +8,11 @@ std::ostream& operator<<(std::ostream& os, const Veiculo& v) {
     int horas = v.minutoEntrada / 60;
     int minutos = v.minutoEntrada % 60;
 
+    char oldFill = os.fill();
     os << "[" << v.getTipo() << "] Placa: " << v.placa
        << " | Modelo: " << v.modelo
        << " | Entrada: " << std::setfill('0') << std::setw(2) << horas << ":"
        << std::setfill('0') << std::setw(2) << minutos;
+    os.fill(oldFill);
     return os;
 }

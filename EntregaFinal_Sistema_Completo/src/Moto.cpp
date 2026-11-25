@@ -1,7 +1,8 @@
 #include "../include/Moto.h"
+#include "../include/UtilitariosTemplate.h"
 
 Moto::Moto(const std::string& p, const std::string& m, int entrada, int cc)
-    : Veiculo(p, m, entrada), cilindradas(cc) {}
+    : Veiculo(p, m, entrada), cilindradas(limitarIntervalo(cc, 50, 2500)) {}
 
 double Moto::calcularTarifa(int minutosPermanencia) const {
     if (minutosPermanencia <= 15) {

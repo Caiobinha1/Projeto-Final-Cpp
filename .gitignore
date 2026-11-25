@@ -8,6 +8,23 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Relatorios gerados em execucao/testes
+relatorio_smart_parking.csv
+relatorio_smart_parking.txt
+teste_historico_estacionamento.csv
+teste_relatorio_estacionamento.txt
+
+# Arquivos temporarios de compilacao LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
 # IDEs e editores
 .vscode/
 .idea/

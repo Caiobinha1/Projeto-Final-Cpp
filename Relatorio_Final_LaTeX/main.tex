@@ -1,0 +1,612 @@
+% ==============================================================================
+% Relatório Técnico Final - Projeto Smart Parking Controller
+% Universidade Federal de Santa Catarina (UFSC) - CTC - EEL
+% Disciplina: EEL7323 / EEL510265 - Programação C++ para Sistemas Embarcados
+% Baseado no Template Oficial do Prof. Eduardo Augusto Bezerra (Overleaf)
+% ==============================================================================
+\documentclass[10pt,twocolumn,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{a4paper, top=2.4cm, bottom=2.2cm, left=1.8cm, right=1.8cm, columnsep=0.65cm}
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,shapes.multipart,fit,backgrounds}
+
+% --- Cores institucionais e de código ---
+\definecolor{ufscBlue}{RGB}{22, 62, 114}
+\definecolor{ufscAccent}{RGB}{43, 108, 176}
+\definecolor{codeBg}{RGB}{247, 250, 252}
+\definecolor{codeFrame}{RGB}{203, 213, 224}
+\definecolor{codeKeyword}{RGB}{26, 54, 157}
+\definecolor{codeComment}{RGB}{74, 118, 86}
+\definecolor{codeString}{RGB}{155, 44, 44}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=ufscBlue,
+    citecolor=ufscAccent,
+    urlcolor=ufscAccent,
+    pdftitle={Smart Parking Controller - Relatório Técnico Final EEL7323},
+    pdfauthor={Caio Missfeld Carlos e Fábio Augusto Dittrich}
+}
+
+% --- Estilo dos blocos de código C++11 ---
+\lstdefinestyle{cppstyle}{
+    language=C++,
+    backgroundcolor=\color{codeBg},
+    frame=single,
+    rulecolor=\color{codeFrame},
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{codeKeyword}\bfseries,
+    commentstyle=\color{codeComment}\itshape,
+    stringstyle=\color{codeString},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    stepnumber=1,
+    tabsize=4,
+    breaklines=true,
+    breakatwhitespace=true,
+    showstringspaces=false,
+    captionpos=b,
+    morekeywords={override,nullptr,noexcept,final,constexpr},
+    literate=
+        {á}{{\'a}}1 {à}{{\`a}}1 {ã}{{\~a}}1 {â}{{\^a}}1
+        {é}{{\'e}}1 {ê}{{\^e}}1 {í}{{\'i}}1
+        {ó}{{\'o}}1 {ô}{{\^o}}1 {õ}{{\~o}}1 {ú}{{\'u}}1
+        {ç}{{\c{c}}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1
+        {Ó}{{\'O}}1 {Ú}{{\'U}}1 {Ç}{{\c{C}}}1
+}
+\lstset{style=cppstyle}
+\renewcommand{\lstlistingname}{Código}
+\emergencystretch=2em
+
+\newcommand{\code}[1]{\texttt{\footnotesize #1}}
+\newcommand{\conceptbadge}[1]{\textbf{\color{ufscBlue}[#1]}}
+
+% --- Cabeçalho ---
+\title{\vspace{-1.0cm}
+{\small\color{ufscAccent}\textbf{UFSC -- CTC -- EEL7323 / EEL510265: Programação C++ para Sistemas Embarcados (2026/2)}}\\[0.35em]
+\textbf{\Large Smart Parking Controller: Arquitetura Orientada a Objetos em C++ para Controle de Estacionamento Embarcado e Simulado}}
+
+\author{
+    \textbf{Caio Missfeld Carlos} \quad e \quad \textbf{Fábio Augusto Dittrich}\\[0.25em]
+    {\small Universidade Federal de Santa Catarina (UFSC) -- Centro Tecnológico (CTC)}\\
+    {\small Docentes: Prof. Dr. Eduardo Augusto Bezerra e Prof. Anderson Wedderhoff Spengler}\\
+    {\small \textbf{Repositório GitHub:} \url{https://github.com/Caiobinha1/Projeto-Final-Cpp}}
+}
+\date{Novembro de 2026}
+
+\begin{document}
+
+\twocolumn[
+\begin{@twocolumnfalse}
+\maketitle
+\begin{abstract}
+\noindent
+Este relatório técnico apresenta o projeto, a implementação e a verificação do \textbf{Smart Parking Controller}, um sistema de controle de acesso, gerenciamento de vagas e tarifação automática de estacionamento desenvolvido em C++11 para sistemas embarcados. O foco central do trabalho é demonstrar, de forma integrada e verificável, a aplicação prática de praticamente todo o conteúdo programático da disciplina EEL7323/EEL510265: encapsulamento, composição, herança simples e múltipla, classes abstratas, polimorfismo dinâmico via \textit{vtable}, destrutores virtuais e RAII, sobrecarga de operadores com funções \code{friend}, programação genérica com classes e funções \textit{template}, alocação dinâmica manual com \textit{deep copy}, contêineres e algoritmos da STL, hierarquia customizada de exceções, manipulação de arquivos (\code{fstream}), camada de abstração de hardware (HAL) e concorrência com \code{std::thread} e \code{std::mutex}. Como o projeto adota simulação integral do funcionamento físico, o motor C++ comunica-se em tempo real via \textit{Pipe IPC} com um simulador visual em Python/Tkinter que renderiza o pátio, a cancela, o display LCD 16x2 da HAL e os eventos operacionais. Todas as entregas parciais e as 10 suítes integradas de testes foram compiladas sob \code{-std=c++11 -Wall -Wextra -Wpedantic} sem erros nem advertências, atingindo 100\% de aprovação.
+
+\vspace{0.4em}
+\noindent\textbf{Palavras-chave:} Sistemas Embarcados, C++11, Orientação a Objetos, Máquina de Estados Finitos, Templates, Polimorfismo, HAL, Concorrência.
+\end{abstract}
+\vspace{0.8em}
+\end{@twocolumnfalse}
+]
+
+% ==============================================================================
+\section{Introdução}
+% ==============================================================================
+
+Sistemas computacionais embarcados exigem previsibilidade temporal, controle rigoroso de recursos de memória, tolerância a falhas e facilidade de manutenção ao longo do ciclo de vida do produto \cite{lee2002embedded,wolf2000computers}. Historicamente, boa parte do \textit{firmware} embarcado foi escrita em linguagem C procedural; contudo, à medida que a complexidade funcional cresce, abordagens puramente procedurais tendem a concentrar regras de negócio em extensas cadeias de \code{switch/case}, estruturas com ponteiros genéricos sem segurança de tipo (\code{void*}) e alto acoplamento entre a lógica de aplicação e os periféricos físicos.
+
+Conforme demonstrado em aplicações críticas reais -- como o \textit{software} de voo dos rovers marcianos do JPL/NASA \cite{maimone2014mars} --, a linguagem C++ permite elevar o nível de abstração arquitetural sem comprometer a eficiência em tempo de execução, desde que seus recursos de Orientação a Objetos (OO), programação genérica e gerenciamento determinístico de memória (RAII) sejam aplicados com disciplina \cite{stroustrup1997,savitch2004}.
+
+Este relatório técnico documenta o desenvolvimento completo do \textbf{Smart Parking Controller}, concebido para a disciplina \textbf{EEL7323 / EEL510265 -- Programação C++ para Sistemas Embarcados} da UFSC \cite{bezerra2026eel7323}. Seguindo a diretriz da disciplina de exercitar o máximo de conteúdos estudados ao longo do semestre em um sistema simulável de ponta a ponta, o projeto modela um controlador de estacionamento de 10 vagas físicas com cancela automatizada, fila externa de espera, cobrança diferenciada por categoria de veículo, relógio/calendário próprio, persistência de relatórios em arquivo, monitoramento concorrente de \textit{timeout} e abstração de periféricos de hardware.
+
+A ênfase deste documento está em apresentar \textbf{cada funcionalidade do sistema} conectando-a diretamente aos \textbf{conceitos de C++ aprendidos em aula}, detalhando a motivação de engenharia, a estrutura das classes e os trechos reais de código responsáveis por cada mecanismo.
+
+% ==============================================================================
+\section{Materiais e Métodos}
+% ==============================================================================
+
+O desenvolvimento adotou uma metodologia incremental em quatro marcos cumulativos, culminando no sistema integrado em \code{EntregaFinal\_Sistema\_Completo/}:
+
+\begin{itemize}[leftmargin=1.2em, itemsep=2pt]
+    \item \textbf{Marco 1 (FSM):} Modelagem e testes isolados da máquina de estados da cancela (\code{FSM\_Controlador}).
+    \item \textbf{Marco 2 (Estruturas de Dados e Exceções):} Implementação manual da fila encadeada genérica \code{FilaEncadeada<T>} com \textit{deep copy}, RAII e exceções herdadas de \code{std::exception}.
+    \item \textbf{Marco 3 (Polimorfismo e Tarifas):} Hierarquia abstrata \code{Veiculo} e subclasses \code{Carro}, \code{Moto} e \code{Caminhao} com despacho dinâmico via \textit{vtable}.
+    \item \textbf{Marco 4 (Sistema Integral):} Integração na classe orquestradora \code{Estacionamento}, incorporando herança múltipla (\code{RelogioCalendario}), funções \textit{template}, STL, manipulação de arquivos (\code{fstream}), camada HAL (\code{IHardwareCancela}), \textit{watchdog} concorrente (\code{std::thread}/\code{std::mutex}), suíte de 10 testes automatizados e simulador visual via IPC.
+\end{itemize}
+
+\subsection{Ferramentas e Ambiente de Compilação}
+
+Todos os módulos foram escritos em \textbf{C++11 padrão} e compilados com \textbf{GCC/MinGW-w64 (\code{g++})} utilizando políticas estritas de verificação estática:
+\begin{lstlisting}[language=bash, numbers=none, caption={Comando de compilação via Makefile (Windows/Linux).}]
+g++ -std=c++11 -Wall -Wextra -Wpedantic -O2 -pthread \
+    src/FSM_Controlador.cpp src/Veiculo.cpp src/Carro.cpp \
+    src/Moto.cpp src/Caminhao.cpp src/RelogioCalendario.cpp \
+    src/Estacionamento.cpp src/main.cpp -o bin/smart_parking
+\end{lstlisting}
+
+No ambiente Windows, a flag \code{-static} gera executáveis autocontidos sem dependência externa de DLLs de \textit{runtime}. Para visualização e teste interativo completo sem necessidade de montagem física obrigatória, desenvolveu-se um simulador 2D em \textit{pixel art} estilo jogo (\code{simulador\_visual.py}, documentado em \code{MANUAL\_SIMULADOR.md}) em \textbf{Python 3 / Tkinter} acoplado ao executável C++ via \textit{pipes} (\code{stdin}/\code{stdout}). Todo o código-fonte, testes, \code{Makefile} e documentação estão disponíveis publicamente em \url{https://github.com/Caiobinha1/Projeto-Final-Cpp}. Adicionalmente, manteve-se um anexo de prototipação física (\code{firmware\_arduino\_cancela.ino}) ilustrando o mapeamento para microcontroladores Arduino/ESP32.
+
+\subsection{Mapeamento Global: Conteúdo da Disciplina vs. Projeto}
+
+A Tabela~\ref{tab:rastreabilidade} sintetiza como cada tópico da ementa de EEL7323/EEL510265 \cite{bezerra2026eel7323} foi concretizado em uma funcionalidade efetiva do sistema.
+
+\begin{table*}[t]
+\centering
+\caption{Rastreabilidade entre o conteúdo programático da disciplina EEL7323/EEL510265 e sua aplicação no Smart Parking Controller.}
+\label{tab:rastreabilidade}
+\renewcommand{\arraystretch}{1.18}
+\scriptsize
+\begin{tabularx}{\textwidth}{>{\bfseries}p{3.1cm} p{3.5cm} X}
+\toprule
+Conteúdo da Disciplina & Módulo / Classe C++ & Aplicação Concreta e Funcionalidade no Projeto \\
+\midrule
+Encapsulamento, \code{const}, \code{static} e FSM & \code{FSM\_Controlador.h/.cpp} & Controle determinístico da cancela (6 estados, 7 eventos); estado interno privado e consultas \code{const} impedem transições ilegais. \\
+Composição e Agregação & \code{Estacionamento.h/.cpp} & Compõe \code{FSM\_Controlador}, \code{FilaEncadeada}, \code{RelogioCalendario} e \code{WatchdogCancela}; agrega ponteiros \code{Veiculo* vagas[10]}. \\
+Herança Simples e \code{protected} & \code{Veiculo}, \code{Carro}, \code{Moto}, \code{Caminhao} & Especialização de veículos compartilhando atributos protegidos (\code{placa}, \code{modelo}, \code{minutoEntrada}). \\
+Classes Abstratas e Polimorfismo (\textit{vtable}) & \code{Veiculo.h} (\code{= 0}) & Métodos virtuais puros \code{calcularTarifa()}, \code{getTipo()} e \code{getVagasNecessarias()}; pátio heterogêneo sem \code{switch/case} (Princípio Aberto/Fechado). \\
+Destrutor Virtual e RAII & \code{\textasciitilde Veiculo()}, \code{\textasciitilde Estacionamento()} & Desalocação polimórfica segura de subclasses ao liberar vagas ou destruir o sistema, garantindo zero vazamentos de memória. \\
+Herança Múltipla & \code{Relogio} + \code{Calendario} $\rightarrow$ \code{RelogioCalendario} & Controle temporal unificado com propagação de virada de meia-noite e anos bissextos para carimbo de tíquetes e relatórios. \\
+Sobrecarga de Operadores e \code{friend} & \code{operator<{}<}, \code{++}, \code{+=}, \code{==}, \code{=} & Formatação em \textit{streams} (\code{Veiculo}, \code{Tiquete}, \code{RelogioCalendario}), incremento de relógio e atribuição com \textit{deep copy} na fila. \\
+Templates (Classes e Funções) & \code{FilaEncadeada<T>}, \code{Nodo<T>}, \code{UtilitariosTemplate.h} & Fila encadeada genérica com alocação manual (\code{new}/\code{delete}) + funções genéricas \code{limitarIntervalo<T>} e \code{calcularMedia<T>}. \\
+Estruturas Dinâmicas e \textit{Deep Copy} & \code{FilaEncadeada.h} & Buffer FIFO na heap com construtor de cópia e \code{operator=} profundos, validados na verificação de duplicidade de placas. \\
+C++ STL (\code{vector}, \code{map}, \code{algorithm}) & \code{Estacionamento.h/.cpp} & Histórico de movimentações em \code{std::vector}, faturamento/contagem por categoria em \code{std::map} e busca de pico com \code{std::max\_element}. \\
+Tratamento de Exceções & \code{Excecoes.h} (\code{std::exception}) & 5 exceções específicas: \code{FilaVazia}, \code{EstacionamentoLotado}, \code{TiqueteInvalido}, \code{CancelaBloqueada} e \code{PlacaDuplicada}. \\
+Manipulação de Arquivos & \code{<fstream>} em \code{Estacionamento} & Exportação de auditoria em CSV (\code{std::ofstream}), relatório gerencial TXT e leitura/validação de registros via \code{std::ifstream}. \\
+Camada HAL (Embarcados) & \code{IHardwareCancela}, \code{HardwareSimulado} & Interface abstrata para servo motor, LEDs semafóricos, buzzer e display LCD 16x2, desacoplando lógica de negócios do hardware. \\
+Concorrência / Threads & \code{WatchdogCancela.h} & Monitor \textit{watchdog} em \code{std::thread} protegido por \code{std::mutex}/\code{std::lock\_guard} e \code{std::atomic<bool>} para \textit{timeout} automático. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+% ==============================================================================
+\section{Projeto Proposto e Funcionalidades sob a Ótica de C++}
+% ==============================================================================
+
+\subsection{Arquitetura Geral do Sistema}
+
+A arquitetura segue o princípio da separação de responsabilidades em camadas, permitindo que o mesmo núcleo C++ opere tanto acoplado ao simulador visual em PC quanto portado para microcontroladores (Figura~\ref{fig:arquitetura}).
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+    node distance=0.55cm and 0.8cm,
+    box/.style={rectangle, draw=ufscBlue, rounded corners=3pt, thick, fill=codeBg,
+                text width=3.2cm, align=center, minimum height=1.05cm, font=\scriptsize},
+    core/.style={rectangle, draw=ufscBlue, rounded corners=4pt, very thick, fill=ufscBlue!10,
+                text width=4.0cm, align=center, minimum height=1.35cm, font=\scriptsize\bfseries},
+    hal/.style={rectangle, draw=ufscAccent, rounded corners=3pt, thick, fill=ufscAccent!10,
+                text width=3.2cm, align=center, minimum height=1.0cm, font=\scriptsize},
+    arr/.style={-{Latex[length=2.2mm]}, thick, color=ufscBlue},
+    biarr/.style={{Latex[length=2mm]}-{Latex[length=2mm]}, thick, color=ufscAccent}
+]
+    \node[box] (gui) {\textbf{Simulador Visual}\\Python 3 / Tkinter\\(\code{simulador\_visual.py})};
+    \node[core, right=1.3cm of gui] (est) {Núcleo Orquestrador C++11\\\code{Estacionamento}\\(Vagas, STL, Arquivos, Exceções)};
+    \node[box, above=0.6cm of est] (fsm) {\textbf{Controle \& Concorrência}\\\code{FSM\_Controlador}\\\code{WatchdogCancela} (\code{std::thread})};
+    \node[box, below=0.6cm of est] (dom) {\textbf{Domínio \& Estruturas}\\\code{Veiculo} (Polimorfismo)\\\code{FilaEncadeada<T>} + \code{RelogioCalendario}};
+    \node[hal, right=1.3cm of est] (halif) {\textbf{Interface HAL Abstrata}\\\code{IHardwareCancela}\\(Servo, LCD 16x2, LEDs, Buzzer)};
+    \node[box, above right=0.05cm and 0.9cm of halif, text width=2.8cm] (halsim) {\textbf{Hardware Simulado}\\\code{HardwareSimulado}\\(Estado p/ GUI e Testes)};
+    \node[box, below right=0.05cm and 0.9cm of halif, text width=2.8cm] (halhw) {\textbf{Alvo Embarcado}\\Arduino / ESP32 / LEON3\\(SG90, HC-SR04, LCD I2C)};
+
+    \draw[biarr] (gui) -- node[above, font=\tiny\bfseries] {Pipe IPC} node[below, font=\tiny] {stdin/JSON} (est);
+    \draw[biarr] (est) -- (fsm);
+    \draw[biarr] (est) -- (dom);
+    \draw[arr] (est) -- node[above, font=\tiny\bfseries] {Polimorfismo} (halif);
+    \draw[arr, dashed] (halif.east) -- (halsim.west);
+    \draw[arr, dashed] (halif.east) -- (halhw.west);
+\end{tikzpicture}
+\caption{Arquitetura em camadas do Smart Parking Controller, destacando o desacoplamento entre interface visual (IPC), núcleo de regras C++11 e camada de abstração de hardware (HAL).}
+\label{fig:arquitetura}
+\end{figure*}
+
+A Figura~\ref{fig:uml} apresenta o diagrama UML simplificado de classes, evidenciando os relacionamentos de herança simples, herança múltipla, composição e agregação polimórfica.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+    uml/.style={rectangle split, rectangle split parts=3, draw=ufscBlue, thick, fill=white,
+                font=\tiny, align=left, inner sep=3.5pt, minimum width=2.8cm},
+    uml2/.style={rectangle split, rectangle split parts=2, draw=ufscBlue, thick, fill=white,
+                font=\tiny, align=left, inner sep=3.5pt, minimum width=2.3cm},
+    umlabs/.style={uml, fill=ufscBlue!8},
+    umlabs2/.style={uml2, fill=ufscBlue!8},
+    inherit/.style={-{Triangle[open, length=2.8mm, width=2.2mm]}, thick, color=ufscBlue},
+    comp/.style={{Diamond[length=2.8mm]}-, thick, color=ufscAccent},
+    agg/.style={{Diamond[open, length=2.8mm]}-, thick, color=ufscAccent}
+]
+    % Centro: Estacionamento
+    \node[uml, fill=ufscBlue!12, minimum width=3.8cm] (est) at (0,0) {
+        \textbf{Estacionamento}
+        \nodepart{two}
+        - vagas[10] : Veiculo*\\
+        - filaEspera : FilaEncadeada<Veiculo*>\\
+        - fsmCancela : FSM\_Controlador\\
+        - relogioSistema : RelogioCalendario\\
+        - hal : IHardwareCancela*\\
+        - historico : vector<Registro>\\
+        - mutexSistema : std::mutex
+        \nodepart{three}
+        + chegarVeiculoEntrada(Veiculo*)\\
+        + emitirTiquete(int) : Tiquete\\
+        + registrarSaida(string, int) : double\\
+        + exportarHistoricoCSV(string) : bool
+    };
+
+    % Esquerda superior: FSM e Watchdog
+    \node[uml] (fsm) at (-5.2, 1.35) {
+        \textbf{FSM\_Controlador}
+        \nodepart{two}
+        - estadoAtual : EstadoControlador\\
+        - totalPassagensSucesso : int
+        \nodepart{three}
+        + processarEvento(Evento) : bool
+    };
+    \node[uml] (wdt) at (-5.2, -0.5) {
+        \textbf{WatchdogCancela}
+        \nodepart{two}
+        - worker : std::thread\\
+        - executando : atomic<bool>
+        \nodepart{three}
+        + iniciar() / parar()
+    };
+
+    % Esquerda inferior: FilaEncadeada Template
+    \node[uml] (fila) at (-5.2, -2.3) {
+        \textbf{FilaEncadeada<T>} \textit{(Template)}
+        \nodepart{two}
+        - primeiro, ultimo : Nodo<T>*
+        \nodepart{three}
+        + enfileirar(const T\&)\\
+        + desenfileirar() : T
+    };
+
+    % Direita superior: RelogioCalendario (Herança Múltipla)
+    \node[uml2] (rel) at (3.9, 2.4) {\textbf{Relogio}\nodepart{two}- hora, minuto};
+    \node[uml2] (cal) at (6.7, 2.4) {\textbf{Calendario}\nodepart{two}- dia, mes, ano};
+    \node[uml2] (rc)  at (5.3, 0.85) {
+        \textbf{RelogioCalendario}
+        \nodepart{two}
+        + operator++() / operator+=()\\
+        + formatarDataHora() : string
+    };
+
+    % Direita inferior: HAL
+    \node[umlabs2] (hal) at (5.3, -0.85) {
+        \textit{<<abstract>>} \textbf{IHardwareCancela}
+        \nodepart{two}
+        + acionarMotorCancela(bool) = 0\\
+        + atualizarDisplayLCD(...) = 0
+    };
+    \node[uml2] (hsim) at (5.3, -2.45) {
+        \textbf{HardwareSimulado}
+        \nodepart{two}
+        - anguloServo : int\\
+        - lcdLinha1, lcdLinha2 : string
+    };
+
+    % Base: Hierarquia Veiculo
+    \node[umlabs, minimum width=3.5cm] (veic) at (0, -2.55) {
+        \textit{<<abstract>>} \textbf{Veiculo}
+        \nodepart{two}
+        \# placa, modelo, minutoEntrada
+        \nodepart{three}
+        + calcularTarifa(int) = 0\\
+        + getTipo() = 0 / getVagas() = 0\\
+        + virtual \textasciitilde Veiculo()
+    };
+    \node[uml2] (car) at (-3.1, -4.3) {\textbf{Carro}\nodepart{two}- temTagEletronica};
+    \node[uml2] (mot) at (0, -4.3)    {\textbf{Moto}\nodepart{two}- cilindradas};
+    \node[uml2] (cam) at (3.1, -4.3)  {\textbf{Caminhao}\nodepart{two}- numeroEixos};
+
+    % Relacionamentos
+    \draw[comp] (est.west) -- ++(-0.6,0) |- (fsm.east);
+    \draw[comp] (est.west) -- ++(-0.6,0) |- (wdt.east);
+    \draw[comp] (est.west) -- ++(-0.6,0) |- (fila.east);
+    \draw[comp] (est.east) -- ++(0.5,0) |- (rc.west);
+    \draw[agg]  (est.east) -- ++(0.5,0) |- (hal.west);
+    \draw[agg]  (est.south) -- (veic.north);
+
+    \draw[inherit] (rc.north west) -- (rel.south);
+    \draw[inherit] (rc.north east) -- (cal.south);
+    \draw[inherit] (hsim.north) -- (hal.south);
+    \draw[inherit] (car.north) -- ++(0,0.25) -| (veic.south);
+    \draw[inherit] (mot.north) -- (veic.south);
+    \draw[inherit] (cam.north) -- ++(0,0.25) -| (veic.south);
+\end{tikzpicture}
+\caption{Diagrama UML de classes do núcleo C++11, destacando composição, agregação polimórfica, classes abstratas (\code{Veiculo} e \code{IHardwareCancela}) e herança múltipla (\code{RelogioCalendario}).}
+\label{fig:uml}
+\end{figure*}
+
+% ------------------------------------------------------------------------------
+\subsection{Funcionalidade 1: Controle Determinístico da Cancela (FSM e Encapsulamento)}
+
+\conceptbadge{Encapsulamento} \conceptbadge{Qualificador \code{const}} \conceptbadge{Métodos \code{static}} \conceptbadge{FSM}
+
+\textbf{Descrição funcional:} A cancela física de entrada nunca pode abrir sem presença confirmada de veículo e emissão de tíquete, nem fechar sobre um carro parado no vão. Para garantir determinismo, a classe \code{FSM\_Controlador} modela 6 estados operacionais e 7 eventos assíncronos, rejeitando qualquer transição ilegal (Figura~\ref{fig:fsm}).
+
+\textbf{Aplicação da matéria:} O atributo \code{estadoAtual} e os contadores internos são estritamente \code{private}; somente o método \code{processarEvento()} pode alterá-los. Todos os métodos de leitura utilizam o qualificador \code{const}, assegurando segurança em chamadas sobre referências constantes, enquanto conversores auxiliares (\code{getNomeEstado}, \code{getNomeEvento}) são declarados \code{static}.
+
+\begin{figure}[H]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.95cm and 0.9cm,
+    st/.style={rectangle, rounded corners=6pt, draw=ufscBlue, thick, fill=codeBg,
+               font=\tiny\bfseries, align=center, minimum width=2.2cm, minimum height=0.58cm},
+    alert/.style={st, draw=red!70!black, fill=red!8, text=red!65!black},
+    tr/.style={-{Latex[length=1.8mm]}, thick, color=ufscBlue},
+    lbl/.style={font=\tiny, fill=white, inner sep=1pt}
+]
+    \node[st] (s0) {LIVRE};
+    \node[st, below=0.75cm of s0] (s1) {VEICULO\_DETECTADO};
+    \node[st, below=0.75cm of s1] (s2) {EMITINDO\_TIQUETE};
+    \node[st, below=0.75cm of s2] (s3) {CANCELA\_ABERTA};
+    \node[st, below left=0.85cm and -0.4cm of s3] (s4) {PASSAGEM\_CONCLUIDA};
+    \node[alert, below right=0.85cm and -0.4cm of s3] (s5) {ALERTA\_BLOQUEIO};
+
+    \draw[tr] (s0) -- node[lbl, right=2pt] {VEICULO\_CHEGOU} (s1);
+    \draw[tr] (s1.west) to[bend left=45] node[lbl, left=1pt] {RECUOU} (s0.west);
+    \draw[tr] (s1) -- node[lbl, right=2pt] {BOTAO\_PRESS.} (s2);
+    \draw[tr] (s2) -- node[lbl, right=2pt] {TIQ.\_RETIRADO} (s3);
+    \draw[tr] (s3) -- node[lbl, left=4pt] {SENSOR\_PASS.} (s4);
+    \draw[tr] (s3) -- node[lbl, right=4pt] {TIMEOUT} (s5);
+    \draw[tr] (s4.west) -- ++(-0.55,0) |- node[lbl, pos=0.25, left] {Auto-fecha} (s0.west);
+    \draw[tr, color=red!70!black] (s5.east) -- ++(0.55,0) |- node[lbl, pos=0.25, right] {RESET} (s0.east);
+\end{tikzpicture}%
+}
+\caption{Diagrama de estados da máquina \code{FSM\_Controlador}.}
+\label{fig:fsm}
+\end{figure}
+
+Adicionalmente, o orquestrador \code{Estacionamento} sincroniza a FSM com a fila de espera: ao concluir a passagem de um veículo, caso haja outro veículo aguardando na fila, a FSM avança automaticamente de \code{LIVRE} para \code{VEICULO\_DETECTADO}, eliminando travamentos em cenários de alto fluxo.
+
+% ------------------------------------------------------------------------------
+\subsection{Funcionalidade 2: Fila de Espera Dinâmica e Funções Genéricas (Templates, Heap, Deep Copy e RAII)}
+
+\conceptbadge{Classe Template} \conceptbadge{Função Template} \conceptbadge{Alocação Dinâmica} \conceptbadge{Deep Copy} \conceptbadge{RAII}
+
+\textbf{Descrição funcional:} Veículos que chegam enquanto outro condutor opera o totem ou quando o pátio está lotado formam uma fila FIFO externa de tamanho dinâmico. O sistema também utiliza funções genéricas para restringir faixas numéricas de parâmetros (ângulo do servo, cilindradas, eixos) e calcular o ticket médio financeiro.
+
+\textbf{Aplicação da matéria:} Em vez de depender exclusivamente da STL para a fila, implementou-se a estrutura \code{FilaEncadeada<T>} com nós \code{Nodo<T>} alocados manualmente na \textit{heap} via \code{new} e liberados via \code{delete} \cite{savitch2004,deitel2006}. Para respeitar a \textit{Regra dos Três} e evitar cópias rasas (\textit{shallow copy}) que causariam \textit{double-free}, o destrutor (\code{\textasciitilde FilaEncadeada}), o construtor de cópia e o operador de atribuição (\code{operator=}) executam cópia profunda (\textit{Deep Copy}).
+
+\begin{lstlisting}[caption={Trecho de \code{FilaEncadeada.h}: Template, RAII e Deep Copy.}]
+template <typename T>
+class FilaEncadeada {
+private:
+    Nodo<T>* primeiro;
+    Nodo<T>* ultimo;
+    int qtdElementos;
+public:
+    ~FilaEncadeada() { liberarTodos(); } // RAII
+    FilaEncadeada(const FilaEncadeada<T>& outra) {
+        copiarDe(outra); // Deep Copy
+    }
+    FilaEncadeada<T>& operator=(const FilaEncadeada<T>& outra) {
+        if (this != &outra) { liberarTodos(); copiarDe(outra); }
+        return *this;
+    }
+    void enfileirar(const T& valor);
+    T desenfileirar(); // lanca FilaVaziaException se vazia
+};
+\end{lstlisting}
+
+Para cobrir também \textbf{funções template} (Semana 7), o cabeçalho \code{UtilitariosTemplate.h} define \code{limitarIntervalo<T>}, \code{calcularMedia<T>} e \code{encontrarMaximo<T>}, aplicadas diretamente nos construtores de \code{Moto}, \code{Caminhao}, \code{HardwareSimulado} e no cálculo gerencial do ticket médio.
+
+% ------------------------------------------------------------------------------
+\subsection{Funcionalidade 3: Alocação de Vagas e Tarifação Polimórfica}
+
+\conceptbadge{Classe Abstrata} \conceptbadge{Métodos Virtuais Puros} \conceptbadge{Polimorfismo / vtable} \conceptbadge{Destrutor Virtual}
+
+\textbf{Descrição funcional:} O pátio possui 10 vagas físicas gerenciadas pelo vetor heterogêneo \code{Veiculo* vagas[10]}. Carros e motos ocupam 1 vaga; caminhões exigem automaticamente \textbf{2 vagas livres contíguas} (ex.: vagas 3 e 4), liberadas em conjunto na saída. As regras tarifárias são:
+\begin{itemize}[leftmargin=1.2em, itemsep=1pt]
+    \item \textbf{Tolerância universal:} $\le 15$ min $\rightarrow$ R\$ 0,00.
+    \item \textbf{Carro:} R\$ 10,00 (primeira hora) + R\$ 3,00/h excedente (fração arredondada para cima); \textbf{10\% de desconto} com tag eletrônica.
+    \item \textbf{Moto:} R\$ 5,00 (primeira hora) + R\$ 1,50/h excedente; adicional de \textbf{R\$ 2,00} para motores acima de 500~cc.
+    \item \textbf{Caminhão:} R\$ 15,00 (primeira hora) + R\$ 5,00/h excedente; adicional de \textbf{R\$ 2,50} por eixo acima de 2 eixos.
+\end{itemize}
+
+\textbf{Aplicação da matéria:} A classe base \code{Veiculo} declara três métodos virtuais puros (\code{= 0}) e um \textbf{destrutor virtual} essencial para evitar vazamento de recursos das subclasses durante \code{delete v} \cite{mizrahi2007,sutter2006}:
+
+\begin{lstlisting}[caption={Classe abstrata \code{Veiculo} com \textit{late binding} e destrutor virtual.}]
+class Veiculo {
+protected:
+    std::string placa, modelo;
+    int minutoEntrada;
+public:
+    virtual ~Veiculo() = default;
+    virtual double calcularTarifa(int min) const = 0;
+    virtual std::string getTipo() const = 0;
+    virtual int getVagasNecessarias() const = 0;
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const Veiculo& v);
+};
+\end{lstlisting}
+
+No momento da saída (\code{Estacionamento::registrarSaida}), o controlador executa simplesmente \code{double tarifa = v->calcularTarifa(tempo);}. O despacho dinâmico via \textit{vtable} seleciona em tempo de execução o cálculo da subclasse real sem qualquer \code{switch/case}, atendendo integralmente ao \textit{Princípio Aberto/Fechado} (OCP): novas categorias (ex.: \code{Onibus} ou \code{VeiculoEletrico}) podem ser incorporadas sem modificar uma linha de \code{Estacionamento}.
+
+% ------------------------------------------------------------------------------
+\subsection{Funcionalidade 4: Controle Temporal e Serialização (Herança Múltipla, Operadores e \code{friend})}
+
+\conceptbadge{Herança Múltipla} \conceptbadge{Sobrecarga de Operadores} \conceptbadge{Funções \code{friend}}
+
+\textbf{Descrição funcional:} Cada tíquete emitido e cada linha do histórico de auditoria recebe um carimbo temporal completo de data e hora (\code{DD/MM/AAAA HH:MM}), com suporte à virada de meia-noite e cálculo correto de anos bissextos.
+
+\textbf{Aplicação da matéria:} Inspirada no exercício clássico \code{ClockCalendar} da disciplina \cite{bezerra2026eel7323}, a classe \code{RelogioCalendario} deriva simultaneamente de \code{Relogio} e \code{Calendario} por \textbf{herança múltipla}. Para sintaxe idiomática em C++, sobrecarregaram-se os operadores \code{++} (avanço de 1 minuto), \code{+=} (avanço de $N$ minutos com propagação de dias), \code{==} e o operador de inserção em \textit{stream} \code{operator<{}<} com declaração \code{friend} -- também presente em \code{Veiculo} e \code{Tiquete} para formatação segura sem quebrar encapsulamento.
+
+\begin{lstlisting}[caption={Herança múltipla e sobrecarga de operadores em \code{RelogioCalendario}.}]
+class RelogioCalendario : public Relogio,
+                          public Calendario {
+public:
+    RelogioCalendario& operator++();
+    RelogioCalendario& operator+=(int deltaMinutos);
+    friend std::ostream& operator<<(
+        std::ostream& os,
+        const RelogioCalendario& rc);
+};
+\end{lstlisting}
+
+% ------------------------------------------------------------------------------
+\subsection{Funcionalidade 5: Camada de Abstração de Hardware (HAL) e Simulador Visual (IPC)}
+
+\conceptbadge{Interface Abstrata (HAL)} \conceptbadge{Injeção de Dependência} \conceptbadge{Comunicação IPC}
+
+\textbf{Descrição funcional:} O sistema controla quatro periféricos típicos de uma cancela embarcada: servo motor SG90 ($0^\circ$ fechada / $90^\circ$ aberta), semáforo LED (vermelho/verde), buzzer de alarme sonoro e display LCD 16x2 com mensagens contextuais ao motorista.
+
+\textbf{Aplicação da matéria:} Seguindo o padrão \code{Robot}/\code{RobotLinux} visto em aula \cite{bezerra2026eel7323}, definiu-se a interface abstrata \code{IHardwareCancela}, recebida por injeção de dependência no construtor de \code{Estacionamento}. Em ambiente de simulação no PC, utiliza-se a implementação concreta \code{HardwareSimulado}, cujo estado (ângulo do servo, LEDs, alarme e linhas do LCD) é serializado em JSON pelo protocolo \code{-{}-pipe} e renderizado em tempo real no display LCD virtual do \code{simulador\_visual.py}. Para implantação física, basta fornecer uma subclasse concreta de \code{IHardwareCancela} acionando os registradores/pinos do Arduino, ESP32-C3 ou FPGA Atlys/LEON3.
+
+% ------------------------------------------------------------------------------
+\subsection{Funcionalidade 6: Segurança Operacional (Hierarquia de Exceções)}
+
+\conceptbadge{Herança de \code{std::exception}} \conceptbadge{Blocos \code{try/catch}} \conceptbadge{\code{noexcept}}
+
+\textbf{Descrição funcional:} Condições anômalas -- como pátio lotado (ou ausência de 2 vagas contíguas para caminhão), tentativa de emissão com fila vazia, cancela travada em \code{ALERTA\_BLOQUEIO}, placa duplicada ou placa inexistente na saída -- são interceptadas de forma limpa sem encerrar abruptamente o sistema.
+
+\textbf{Aplicação da matéria:} O cabeçalho \code{Excecoes.h} define \code{EstacionamentoException : public std::exception} com sobrescrita de \code{what() const noexcept override} e cinco classes derivadas especializadas (\code{FilaVaziaException}, \code{EstacionamentoLotadoException}, \code{TiqueteInvalidoException}, \code{CancelaBloqueadaException} e \code{PlacaDuplicadaException}). No protocolo \code{-{}-pipe}, exceções capturadas em blocos \code{try/catch} são convertidas em respostas \code{ERRO <mensagem>} exibidas ao operador no simulador.
+
+% ------------------------------------------------------------------------------
+\subsection{Funcionalidade 7: Inteligência Gerencial e Persistência (STL e Arquivos \code{<fstream>})}
+
+\conceptbadge{STL \code{vector}/\code{map}/\code{algorithm}} \conceptbadge{Arquivos \code{ofstream}/\code{ifstream}}
+
+\textbf{Descrição funcional:} Cada saída gera um registro auditável (\code{RegistroMovimentacao}) contendo placa, categoria, modelo, horários, permanência e valor pago, possibilitando indicadores por categoria, maior permanência, ticket médio e exportação sob demanda em arquivos \code{.csv} e \code{.txt}.
+
+\textbf{Aplicação da matéria:}
+\begin{itemize}[leftmargin=1.2em, itemsep=1pt]
+    \item \textbf{STL:} \code{std::vector<RegistroMovimentacao>} armazena o histórico; dois mapas associativos (\code{std::map<std::string, int>} e \code{std::map<std::string, double>}) consolidam atendimentos e receita por categoria; e \code{std::max\_element} (de \code{<algorithm>}) combinada a uma função \textit{lambda} C++11 identifica o pico de permanência.
+    \item \textbf{Arquivos:} \code{exportarHistoricoCSV()} e \code{salvarRelatorioTXT()} utilizam \code{std::ofstream} com manipuladores de \textit{stream} (\code{std::fixed}, \code{std::setprecision}), enquanto \code{carregarContagemRegistrosCSV()} valida a leitura de volta via \code{std::ifstream} e \code{std::getline}.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+\subsection{Funcionalidade 8: Watchdog Concorrente da Cancela (Threads e Mutex)}
+
+\conceptbadge{\code{std::thread}} \conceptbadge{\code{std::mutex}} \conceptbadge{\code{std::lock\_guard}} \conceptbadge{\code{std::atomic}}
+
+\textbf{Descrição funcional:} Caso um veículo estacione indevidamente no vão após a abertura da cancela e não acione o sensor de passagem dentro do limite de tempo configurado, o sistema deve disparar automaticamente o estado \code{ALERTA\_BLOQUEIO} e ligar o alarme sonoro na HAL.
+
+\textbf{Aplicação da matéria:} A classe \code{WatchdogCancela} executa um laço de supervisão em uma \textit{thread} dedicada (\code{std::thread}). Todo acesso compartilhado à FSM e à HAL em \code{Estacionamento} é sincronizado por \code{std::mutex} usando o padrão RAII \code{std::lock\_guard<std::mutex>}, prevenindo condições de corrida (\textit{data races}). O ciclo de vida da \textit{thread} é controlado por \code{std::atomic<bool>}, garantindo encerramento determinístico com \code{worker.join()} no destrutor \code{\textasciitilde WatchdogCancela()}.
+
+\begin{lstlisting}[caption={Trecho de \code{WatchdogCancela.h}: supervisão concorrente segura.}]
+{
+    std::lock_guard<std::mutex> lock(*mutexEstado);
+    if (fsm->isCancelaAberta() && decorrido >= timeoutMs) {
+        if (fsm->processarEvento(
+                EVENTO_TIMEOUT_PASSAGEM)) {
+            disparosTimeout++;
+            dispararCallback = true;
+        }
+    }
+}
+\end{lstlisting}
+
+% ------------------------------------------------------------------------------
+\subsection{Estratégia de Integração e Testes}
+
+A verificação foi conduzida em três níveis complementares:
+\begin{enumerate}[leftmargin=1.3em, itemsep=1pt]
+    \item \textbf{Testes unitários modulares:} executáveis dedicados para cada entrega (\code{entrega1}, \code{entrega2} e \code{entrega3}), incluindo teste de estresse de 10.000 operações na fila encadeada.
+    \item \textbf{Suíte integrada automatizada (10 cenários):} executada pelo modo padrão de \code{smart\_parking}, cobrindo inicialização HAL, fila múltipla com sincronismo FSM, cálculo tarifário polimórfico, herança múltipla em ano bissexto, funções \textit{template}, escrita/leitura de arquivos CSV/TXT, desistência e placa duplicada, \textit{timeout} concorrente via \code{WatchdogCancela}, lotação máxima e busca inválida.
+    \item \textbf{Teste de integração IPC (end-to-end):} script automatizado exercitando todos os comandos do protocolo \code{-{}-pipe} (\code{CHEGAR} com modelos contendo espaços, \code{EMITIR}, \code{PASSAR}, \code{TIMEOUT}, \code{RESET}, \code{RECUAR}, \code{RELOGIO}, \code{SAIR}, \code{EXPORTAR}, \code{STATUS} JSON) exatamente como consumido pelo \code{simulador\_visual.py}.
+\end{enumerate}
+
+% ==============================================================================
+\section{Resultados}
+% ==============================================================================
+
+Todos os executáveis foram compilados com \code{g++} sob \code{-std=c++11 -Wall -Wextra -Wpedantic -O2 -pthread}, registrando \textbf{0 erros e 0 advertências}. A Tabela~\ref{tab:testes} consolida os resultados objetivos obtidos nas execuções das suítes automatizadas.
+
+\begin{table}[H]
+\centering
+\caption{Resumo da validação dos módulos compilados e testes executados.}
+\label{tab:testes}
+\resizebox{\columnwidth}{!}{%
+\scriptsize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Módulo / Suíte} & \textbf{Warnings} & \textbf{Resultado} \\
+\midrule
+Entrega 1 -- \code{FSM\_Controlador} (5 testes) & 0 & 100\% Aprovado \\
+Entrega 2 -- \code{FilaEncadeada<T>} (5 testes) & 0 & 100\% Aprovado \\
+Entrega 3 -- Polimorfismo/Tarifas (5 testes) & 0 & 100\% Aprovado \\
+Entrega Final -- Integrado (10 suítes) & 0 & 100\% Aprovado \\
+Teste End-to-End Pipe IPC + JSON & 0 & 100\% Aprovado \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+A Tabela~\ref{tab:tarifas} apresenta os valores reais validados por asserções (\code{assert}) durante a suíte integrada para as cinco combinações de categorias e atributos especiais testadas.
+
+\begin{table}[H]
+\centering
+\caption{Validação do cálculo tarifário polimórfico (\textit{vtable}) na suíte integrada.}
+\label{tab:tarifas}
+\resizebox{\columnwidth}{!}{%
+\scriptsize
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+\textbf{Veículo} & \textbf{Atributo} & \textbf{Perm.} & \textbf{Vagas} & \textbf{Tarifa (R\$)} \\
+\midrule
+Carro (Polo) & Sem tag & 150 min & 1 & 16,00 \\
+Carro (Civic) & Com tag (-10\%) & 150 min & 1 & 14,40 \\
+Moto (CB500) & 500 cc (toler.) & 10 min & 1 & 0,00 \\
+Moto (MT-07) & 689 cc (>500cc) & 120 min & 1 & 8,50 \\
+Caminhão (FH) & 3 eixos & 90 min & 2 & 22,50 \\
+\midrule
+\multicolumn{4}{l}{\textbf{Faturamento Total / Ticket Médio (5 veículos)}} & \textbf{61,40 / 12,28} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+Durante o teste do \code{WatchdogCancela} (Suíte 8), configurou-se um limite determinístico de 120~ms: sem confirmação de passagem pela cancela, a \textit{thread} auxiliar detectou o estouro de tempo, realizou a transição segura para \code{ALERTA\_BLOQUEIO} sob exclusão mútua, acionou o alarme da HAL e bloqueou novas emissões de tíquete até o envio de \code{EVENTO\_RESET\_SISTEMA}.
+
+Na verificação de persistência (Suíte 6), os arquivos CSV e TXT foram gerados integralmente via \code{std::ofstream} e reabertos via \code{std::ifstream}, confirmando exatamente os 5 registros esperados. No teste de integração IPC, corrigiu-se uma falha crítica original na leitura de modelos com espaço (como \code{Volvo FH} e \code{Yamaha MT07}) e validou-se o sincronismo contínuo da FSM quando múltiplos veículos aguardam simultaneamente na fila.
+
+% ==============================================================================
+\section{Discussão}
+% ==============================================================================
+
+A experiência de desenvolvimento confirmou as vantagens estruturais do paradigma orientado a objetos em C++ para sistemas embarcados complexos:
+
+\begin{enumerate}[leftmargin=1.2em, itemsep=2pt]
+    \item \textbf{Manutenibilidade e OCP:} O uso de \code{Veiculo*} com despacho via \textit{vtable} eliminou ramificações condicionais por tipo no orquestrador. O custo computacional de uma indireção de ponteiro na \textit{vtable} é desprezível frente à escala temporal de segundos de uma cancela física.
+    \item \textbf{Compromissos para Embarcados (\textit{Trade-offs}):} Em microcontroladores ultrarrecursos sem MMU (\textit{bare-metal}), alocação dinâmica frequente na \textit{heap} (\code{new}/\code{delete}) e exceções C++ podem introduzir fragmentação ou sobrecarga de pilha se usadas sem critério \cite{maimone2014mars}. No presente projeto, ambos os mecanismos foram deliberadamente empregados para cobrir integralmente a ementa da disciplina, porém encapsulados sob RAII rigoroso (\code{\textasciitilde FilaEncadeada}, \code{\textasciitilde Estacionamento}, destrutores virtuais e \code{std::lock\_guard}), garantindo desalocação determinística. Para migração a um MCU restrito, a arquitetura permite substituir a alocação dinâmica por um \textit{pool} estático mantendo inalterada a interface pública da fila e das classes de domínio.
+    \item \textbf{Portabilidade via HAL:} Separar a lógica de controle na classe \code{Estacionamento} dos atuadores por meio da interface abstrata \code{IHardwareCancela} viabilizou testar 100\% do comportamento em ambiente simulado (PC + Tkinter) com a mesma arquitetura preparada para Arduino, ESP32-C3 ou FPGA Atlys/LEON3.
+\end{enumerate}
+
+% ==============================================================================
+\section{Conclusão e Trabalhos Futuros}
+% ==============================================================================
+
+O projeto \textbf{Smart Parking Controller} cumpriu integralmente os objetivos da disciplina EEL7323/EEL510265, demonstrando na prática a integração coesa de FSM, encapsulamento, composição, herança simples e múltipla, polimorfismo dinâmico, sobrecarga de operadores, funções \code{friend}, classes e funções \textit{template}, alocação dinâmica com \textit{deep copy} e RAII, STL, exceções, manipulação de arquivos, abstração de hardware (HAL) e programação concorrente com \textit{threads}. A simulação visual via IPC comprovou o funcionamento interativo completo do sistema em tempo real, com 100\% dos testes unitários e integrados aprovados.
+
+Como trabalhos futuros, destacam-se: (i) implementação concreta da interface \code{IHardwareCancela} diretamente em ESP-IDF (ESP32-C3) com FreeRTOS e protocolo MQTT para monitoramento em nuvem; (ii) substituição do alocador \textit{heap} por um \textit{memory pool} estático determinístico para certificação em sistemas críticos; e (iii) reconhecimento automático de placas (ALPR) integrado ao evento de chegada no laço indutivo.
+
+\section*{Agradecimentos}
+Agradecemos aos professores Dr. Eduardo Augusto Bezerra e Anderson Wedderhoff Spengler, bem como ao Departamento de Engenharia Elétrica e Eletrônica (EEL/CTC/UFSC), pelo material didático e orientação ao longo da disciplina.
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}

@@ -3,248 +3,142 @@
 **Departamento de Engenharia Elétrica e Eletrônica (EEL)**  
 **Disciplina:** EEL7323 / EEL510265 – Programação C++ para Sistemas Embarcados  
 **Docentes:** Prof. Dr. Eduardo Augusto Bezerra e Prof. Anderson Wedderhoff Spengler  
+**Autores:** Caio Missfeld Carlos e Fábio Augusto Dittrich  
 **Semestre:** 2026/2  
 
 ---
 
 ## 1. Visão Geral do Projeto
 
-O **Smart Parking Controller** é um projeto de engenharia de software para sistemas embarcados em tempo real, desenvolvido em C++11 com arquitetura orientada a objetos. O sistema gerencia o fluxo de controle de acesso, estacionamento e cobrança de veículos através de:
+O **Smart Parking Controller** é um projeto completo de engenharia de software em **C++11** desenvolvido para aplicar, de forma integrada e simulável, o máximo do conteúdo programático da disciplina EEL7323/EEL510265. O sistema gerencia o fluxo completo de controle de acesso, fila externa de espera, alocação física de vagas, tarifação polimórfica, controle temporal, auditoria em arquivo e supervisão de segurança em tempo real:
 
-- **Máquina de Estados Finitos (FSM):** Controle determinístico da cancela de entrada com sensores de laço indutivo, botão do totem, barreira óptica e temporizador de segurança;
-- **Estruturas de Dados Dinâmicas Próprias:** Fila encadeada baseada em **Templates** com alocação dinâmica manual (`new`/`delete`), cópia profunda (*Deep Copy*) e padrão RAII (sem dependência exclusiva da STL);
-- **Hierarquia Polimórfica de Veículos:** Classe base abstrata pura `Veiculo` e subclasses derivadas `Carro`, `Moto` e `Caminhao` com *late binding* via *vtable*, calculando tarifas específicas de forma extensível e desacoplada;
-- **Sobrecarga de Operadores e `friend`:** Serialização formatada em streams (`operator<<`) com acesso seguro a membros protegidos;
-- **Tratamento Robusto de Exceções:** Hierarquia customizada baseada em `std::exception` para falhas operacionais, lotação máxima e tíquetes inválidos;
-- **Simulador Gráfico Interativo (Dashboard / Jogo):** Interface visual em Python/Tkinter conectada diretamente ao binário C++ via Pipe IPC em tempo real.
-
----
-
-## 2. Todas as Funcionalidades do Sistema
-
-Para oferecer uma visão clara e completa de toda a engenharia implementada no projeto, abaixo estão detalhadas as **9 principais funcionalidades operacionais e técnicas** do Smart Parking Controller:
-
-1. **Controle Físico de Acesso por FSM (Cancela Inteligente):**
-   - Gerencia a cancela de entrada através de uma Máquina de Estados Finitos (`FSM_Controlador`) determinística (`FECHADA`, `ABRINDO`, `ABERTA`, `FECHANDO`, `ALERTA_OBSTACULO`);
-   - Monitora eventos assíncronos: presença de veículo no laço indutivo, acionamento do botão do totem, barreira óptica antiesmagamento e temporizador de fechamento automático com tratamento de *timeout* e falhas mecânicas.
-
-2. **Fila Dinâmica de Espera (Buffer FIFO com Templates C++):**
-   - Estrutura de dados genérica `FilaEncadeada<T>` implementada do zero com alocação dinâmica em *heap* (`new`/`delete`);
-   - Gerencia a fila de espera na cancela quando o pátio atinge a capacidade máxima de vagas;
-   - Implementa construtor de cópia profunda (*Deep Copy*), operador de atribuição (`operator=`) e destrutor para assegurar o ciclo de vida sob o paradigma RAII (*Resource Acquisition Is Initialization*), impedindo vazamentos de memória.
-
-3. **Alocação Inteligente de Vagas Físicas no Pátio:**
-   - O pátio possui 10 vagas físicas numeradas (índices 0 a 9) gerenciadas por um vetor polimórfico de ponteiros `Veiculo* vagas[10]`;
-   - **Vagas Simples:** Carros e motos ocupam 1 vaga individual;
-   - **Vagas Contíguas Duplas:** Caminhões exigem e alocam automaticamente **duas vagas livres consecutivas lado a lado** (ex: vagas 3 e 4). Na saída, ambas as vagas são liberadas simultaneamente.
-
-4. **Cálculo de Tarifas 100% Polimórfico (Sem `switch/case`):**
-   - Elimina verificações condicionais procedurais, utilizando classes derivadas com *late binding* via tabela de ponteiros de funções virtuais (*vtable*):
-     - **Tolerância Geral:** Permanências de até 15 minutos são isentas de cobrança para qualquer categoria de veículo;
-     - **Carro:** Tarifa base de R$ 10,00/hora. Veículos com tag eletrônica (Sem Parar/ConectCar) recebem **10% de desconto automático**;
-     - **Moto:** Tarifa base de R$ 5,00/hora. Motos de alta cilindrada (> 300cc) possuem **adicional de 20%** por porte e taxa de seguro de vaga;
-     - **Caminhão:** Tarifa base de R$ 20,00/hora multiplicada pelo número de eixos e proporcional às vagas ocupadas.
-
-5. **Emissão de Tíquetes e Registro de Saída:**
-   - Ao passar pela cancela, o sistema emite um tíquete com identificador sequencial único, placa do veículo, categoria e horário de entrada em minutos;
-   - No momento do pagamento e saída, o sistema valida o tíquete, calcula o tempo total de permanência e computa a tarifa devida de acordo com as regras polimórficas do veículo.
-
-6. **Tratamento de Exceções Operacionais com Hierarquia Própria:**
-   - Hierarquia customizada de tratamento de erros baseada em `std::exception`:
-     - `EstacionamentoLotadoException`: disparada ao tentar estacionar com pátio cheio e fila externa esgotada;
-     - `FilaVaziaException`: disparada ao tentar desenfileirar sem veículos aguardando;
-     - `TiqueteInvalidoException`: disparada ao tentar registrar saída com tíquete nulo ou inexistente.
-   - Previne travamentos e garante a integridade dos dados mesmo sob condições operacionais adversas.
-
-7. **Relatório Gerencial e Fechamento Financeiro em Tempo Real:**
-   - Monitoramento contínuo da operação com métricas instantâneas:
-     - Total de vagas livres e ocupadas;
-     - Quantidade de veículos na fila de espera externa;
-     - Contagem histórica de veículos atendidos por categoria (carros, motos e caminhões);
-     - Receita financeira total acumulada (R$) e faturamento discriminado.
-   - Impressão formatada em console através da sobrecarga do operador `<<` (`std::ostream& operator<<`).
-
-8. **Simulador Gráfico Interativo com IPC em Tempo Real:**
-   - Interface visual desktop em Python/Tkinter ([`simulador_visual.py`](./simulador_visual.py)) com renderização gráfica do pátio e das 10 vagas coloridas por status e categoria do veículo;
-   - Comunicação bidirecional via Pipes (`stdin`/`stdout`) com o binário compilado em C++ (`smart_parking.exe`), garantindo que **toda a lógica de negócios, regras e cálculos sejam executados estritamente pelo código C++**;
-   - Permite acelerar o tempo do relógio da simulação, injetar veículos e testar todas as transições de estados da cancela interativamente.
-
-9. **Firmware e Projeto Físico de Hardware Embarcado:**
-   - Projeto prático para implementação física com microcontrolador Arduino Uno ou ESP32;
-   - Integração com servo motor SG90 (cancela física), sensor ultrassônico HC-SR04 (laço indutivo), sensor infravermelho de obstáculo (fotocélula antiesmagamento), LEDs de sinalização e display LCD I2C para mensagens ao motorista;
-   - Código firmware pronto ([`firmware_arduino_cancela.ino`](./Implementacao_Fisica_Hardware/firmware_arduino_cancela.ino)) e esquemático elétrico pino a pino disponível na pasta de hardware.
+- **Máquina de Estados Finitos (FSM):** Controle determinístico da cancela (`FSM_Controlador`) com 6 estados e 7 eventos assíncronos;
+- **Templates (Classes e Funções):** Fila encadeada dinâmica própria (`FilaEncadeada<T>` / `Nodo<T>`) com alocação manual (`new`/`delete`), cópia profunda (*Deep Copy*) e RAII, complementada por funções *template* utilitárias (`UtilitariosTemplate.h`);
+- **Hierarquia Polimórfica de Veículos:** Classe base abstrata pura `Veiculo` e subclasses `Carro`, `Moto` e `Caminhao` com *late binding* via *vtable* e destrutor virtual;
+- **Herança Múltipla e Sobrecarga de Operadores:** Classe `RelogioCalendario` derivando de `Relogio` e `Calendario`, com operadores `++`, `+=`, `==` e `friend operator<<` (também presente em `Veiculo` e `Tiquete`);
+- **Camada de Abstração de Hardware (HAL):** Interface abstrata `IHardwareCancela` e driver simulado `HardwareSimulado` (servo motor 0°–90°, semáforo LED, buzzer e display LCD 16x2), desacoplando a lógica de negócio dos periféricos físicos;
+- **STL e Persistência em Arquivos (`<fstream>`):** Histórico de movimentações (`std::vector`), consolidação por categoria (`std::map`), busca de maior permanência (`std::max_element`) e exportação/leitura de relatórios em `.csv` e `.txt`;
+- **Concorrência (`std::thread` + `std::mutex`):** Monitor *watchdog* (`WatchdogCancela`) executando em *thread* dedicada com `std::lock_guard` e `std::atomic<bool>` para disparo automático de `ALERTA_BLOQUEIO` por *timeout*;
+- **Tratamento Robusto de Exceções:** Hierarquia própria herdada de `std::exception` (`FilaVaziaException`, `EstacionamentoLotadoException`, `TiqueteInvalidoException`, `CancelaBloqueadaException` e `PlacaDuplicadaException`);
+- **Simulador Gráfico Interativo (IPC):** Interface visual em Python/Tkinter (`simulador_visual.py`) conectada em tempo real ao executável C++ via *Pipes* (`stdin`/`stdout`), com renderização do pátio, cancela e display LCD 16x2 virtual da HAL.
 
 ---
 
-## 3. Como Funcionam as Entregas do Projeto (Metodologia Prof. Eduardo Bezerra)
+## 2. Funcionalidades do Sistema e Mapeamento da Disciplina
 
-Conforme as diretrizes pedagógicas da disciplina e as orientações encaminhadas pelo docente, a segunda metade do semestre é estruturada no formato de **laboratório prático de desenvolvimento assistido**, no qual o projeto é avaliado de forma contínua em **4 etapas cumulativas**:
+1. **Controle Determinístico da Cancela (`FSM_Controlador`):**
+   - Estados oficiais implementados: `ESTADO_LIVRE`, `ESTADO_VEICULO_DETECTADO`, `ESTADO_EMITINDO_TIQUETE`, `ESTADO_CANCELA_ABERTA`, `ESTADO_PASSAGEM_CONCLUIDA` e `ESTADO_ALERTA_BLOQUEIO`;
+   - Eventos tratados: `EVENTO_VEICULO_CHEGOU`, `EVENTO_BOTAO_PRESSIONADO`, `EVENTO_TIQUETE_RETIRADO`, `EVENTO_SENSOR_PASSAGEM`, `EVENTO_TIMEOUT_PASSAGEM`, `EVENTO_RESET_SISTEMA` e `EVENTO_VEICULO_RECUOU`;
+   - Sincronismo automático com a fila de espera: ao concluir a travessia de um veículo, o próximo veículo da fila avança imediatamente para o laço indutivo (`ESTADO_VEICULO_DETECTADO`).
 
-### A. A Transição de Fase na Disciplina
-Encerradas as provas teóricas e práticas individuais da primeira etapa, a disciplina adota o modelo de mentoria de engenharia:
-- **Trabalho em Dupla:** Desenvolvimento conjunto da arquitetura, código e testes (máximo 2 alunos);
-- **Aulas de Acompanhamento:** Menos encontros expositivos tradicionais e mais sessões de laboratório para validação dos marcos e entregas parciais;
-- **Foco no Ciclo Completo:** Desde o levantamento de requisitos e diagramação preliminar até a codificação, testes de integração, documentação formal e apresentação prática ao vivo.
+2. **Fila Dinâmica de Espera e Utilitários Genéricos (`FilaEncadeada<T>` e `UtilitariosTemplate.h`):**
+   - Fila FIFO com `Nodo<T>` alocado manualmente em *heap* (`new`/`delete`), destrutor RAII, construtor de cópia e `operator=` com *Deep Copy*;
+   - Funções *template* `limitarIntervalo<T>`, `calcularMedia<T>` e `encontrarMaximo<T>`.
 
-### B. As 4 Etapas de Entrega e Critérios de Avaliação
-1. **Marco 0 – Apresentação da Proposta (Semana 10):**
-   - Apresentação da proposta técnica, mapeamento dos conceitos de OO aplicados, especificação de requisitos (funcionais e não-funcionais), divisão de tarefas (EAP/WBS) e cronograma de execução.
-2. **Marco 1 – Modelagem e Núcleo da FSM (Semana 11-12 | Peso 20%):**
-   - Diagrama de classes preliminar e implementação da Máquina de Estados Finitos (`FSM_Controlador`) funcional em C++, com testes comprovando o controle da cancela e transições seguras.
-3. **Marco 2 – Estruturas de Dados Encadeadas (Semana 13 | Peso 20%):**
-   - Implementação de estruturas dinâmicas próprias (filas/listas encadeadas com Templates) e hierarquia de tratamento de exceções, operando com alocação dinâmica (`new`/`delete`) e RAII.
-4. **Marco 3 – Polimorfismo e Modelo Tarifário (Semana 14 | Peso 20%):**
-   - Hierarquia polimórfica com classes abstratas, eliminando comandos condicionais (`switch/case`), com despacho dinâmico por *vtable*, sobrecarga de operadores e testes unitários.
-5. **Marco 4 – Sistema Integral Consolidado & Apresentação (Semanas 15-17 | Peso 40%):**
-   - Integração completa de todos os módulos na classe `Estacionamento`, repositório GitHub documentado, bateria completa de testes automatizados, relatório técnico final em PDF e demonstração prática ao vivo para os professores.
+3. **Alocação Física de Vagas e Tarifação 100% Polimórfica (`Veiculo`, `Carro`, `Moto`, `Caminhao`):**
+   - Vetor polimórfico `Veiculo* vagas[10]` (Carros e Motos ocupam 1 vaga; Caminhões exigem e liberam **2 vagas contíguas**);
+   - Regras tarifárias implementadas via *vtable* (`calcularTarifa(int)`):
+     - **Tolerância Geral:** permanência $\le 15$ min é isenta (`R$ 0,00`) para todas as categorias;
+     - **Carro:** `R$ 10,00` (1ª hora) + `R$ 3,00` por hora excedente (fração arredondada para cima); **10% de desconto** com tag eletrônica;
+     - **Moto:** `R$ 5,00` (1ª hora) + `R$ 1,50` por hora excedente; adicional de **`R$ 2,00`** para motores acima de `500 cc`;
+     - **Caminhão:** `R$ 15,00` (1ª hora) + `R$ 5,00` por hora excedente; adicional de **`R$ 2,50`** por eixo excedente acima de 2 eixos.
 
-### C. Checklist Obrigatório de Conceitos de C++ Exigidos
-O Prof. Bezerra avalia se a solução contempla explicitamente os pilares da disciplina:
-* [x] **Classes Abstratas e Polimorfismo Dinâmico:** Classes com funções virtuais puras (`= 0`) e despacho em tempo de execução via *vtable*;
-* [x] **Destrutor Virtual e RAII:** Destrutores virtuais em todas as classes base polimórficas para evitar vazamentos de memória na destruição de subclasses;
-* [x] **Máquina de Estados Finitos (FSM):** Controle determinístico de atuadores e tratamento de falhas/timeouts;
-* [x] **Templates (Generics):** Estruturas parametrizadas por tipo com segurança estática em tempo de compilação;
-* [x] **Estruturas Dinâmicas Próprias:** Fila encadeada implementada manualmente com gerenciamento na *heap*, sem dependência de bibliotecas prontas;
-* [x] **Sobrecarga de Operadores e `friend`:** Funções amigas permitindo acesso controlado a membros protegidos para inserção em streams;
-* [x] **Tratamento de Exceções:** Classes de erro herdando de `std::exception` capturadas por blocos `try/catch`.
+4. **Relógio e Calendário Integrados (`RelogioCalendario` — Herança Múltipla):**
+   - Herda simultaneamente de `Relogio` e `Calendario`, propagando viradas de meia-noite e anos bissextos com sobrecarga de `operator++`, `operator+=`, `operator==` e `friend operator<<`.
 
-### D. Por que o Smart Parking Controller é o Projeto Ideal?
-Na programação procedural clássica (C estruturado), sistemas desse porte dependem de tabelas gigantes de `switch/case` e structs com uniões inseguras (`void*`). Em C++, a hierarquia de `Veiculo` permite que o sistema gerencie o pátio com o vetor `Veiculo* vagas[10]`: novas categorias de veículos podem ser adicionadas no futuro sem que uma única linha do controlador central precise ser alterada, respeitando com perfeição o **Princípio Aberto/Fechado (Open/Closed Principle - OCP)**.
+5. **Camada de Abstração de Hardware (`IHardwareCancela` / `HardwareSimulado`):**
+   - Interface abstrata pura controlando servo motor ($0^\circ$ / $90^\circ$), semáforo LED, buzzer e display LCD 16x2, refletidos em tempo real no simulador visual e prontos para portabilidade embarcada.
+
+6. **Análise Gerencial (STL) e Persistência em Arquivos (`<fstream>`):**
+   - Histórico em `std::vector<RegistroMovimentacao>`, estatísticas por categoria em `std::map`, maior permanência com `std::max_element` e exportação/leitura validada de arquivos `.csv` e `.txt`.
+
+7. **Watchdog Concorrente (`WatchdogCancela` — `std::thread` + `std::mutex`):**
+   - Supervisão assíncrona em *thread* separada com exclusão mútua (`std::lock_guard<std::mutex>`) e parada limpa (`std::atomic<bool>` + `join()`), acionando `ALERTA_BLOQUEIO` automaticamente em caso de estouro de tempo com a cancela aberta.
+
+8. **Hierarquia Customizada de Exceções (`Excecoes.h`):**
+   - `EstacionamentoException : public std::exception` e 5 exceções específicas: `FilaVaziaException`, `EstacionamentoLotadoException`, `TiqueteInvalidoException`, `CancelaBloqueadaException` e `PlacaDuplicadaException`.
+
+9. **Simulador Gráfico Interativo (`simulador_visual.py`) + Anexo de Hardware (`Implementacao_Fisica_Hardware/`):**
+   - Interface Tkinter conectada via Pipe IPC (`smart_parking.exe --pipe`), com controles de chegada, emissão, travessia, *timeout*, *reset*, recuo, avanço de relógio, exportação de relatório CSV/TXT e display LCD 16x2 virtual.
 
 ---
 
-## 4. Estrutura de Diretórios do Projeto
+## 3. Estrutura de Diretórios do Projeto
 
 ```
 .
-├── README.md                                  <- Este documento mestre
-├── simulador_visual.py                        <- Simulador gráfico interativo (GUI / Jogo)
+├── README.md                                  <- Documentação principal do repositório
+├── MANUAL_SIMULADOR.md                        <- Guia detalhado de uso do simulador 2D pixel-art
+├── Makefile                                   <- Build e testes automatizados (Windows/Linux)
+├── simulador_visual.py                        <- Simulador interativo 2D em pixel art (Python/Tkinter + IPC)
 │
-├── Proposta/                                  <- Proposta Inicial (Apresentação Semana 10)
-│   ├── Proposta_Projeto_Estacionamento.pdf    <- Relatório em PDF da proposta
-│   ├── README_Proposta.md
-│   └── gerar_proposta_pdf.py
+├── Relatorio_Final_LaTeX/                     <- Relatório Técnico Final em LaTeX (Template Prof. Bezerra)
+│   ├── main.tex                               <- Documento em 2 colunas com diagramas TikZ e código real
+│   ├── references.bib                         <- Referências bibliográficas da disciplina
+│   └── Relatorio_Final_Smart_Parking.pdf      <- PDF final compilado pronto para entrega
 │
-├── Entrega1_FSM_Modelagem/                    <- Marco 1: Máquina de Estados da Cancela (20%)
-│   ├── include/FSM_Controlador.h
-│   ├── src/FSM_Controlador.cpp
-│   ├── src/main_entrega1.cpp                  <- Testes da FSM
-│   ├── bin/entrega1.exe                       <- Binário compilado e validado
-│   ├── Relatorio_Entrega1.pdf                 <- Relatório técnico em PDF
-│   └── README_Entrega1.md
+├── tests/                                     <- Testes end-to-end do protocolo Pipe IPC
+│   └── test_ipc_e2e.py
 │
-├── Entrega2_Estruturas_Dados/                 <- Marco 2: Fila Encadeada Template & Exceções (20%)
-│   ├── include/FilaEncadeada.h                <- Template com alocação dinâmica
-│   ├── include/Excecoes.h                     <- Hierarquia de exceções
-│   ├── src/main_entrega2.cpp                  <- Testes de estresse e Deep Copy
-│   ├── bin/entrega2.exe                       <- Binário compilado e validado
-│   ├── Relatorio_Entrega2.pdf                 <- Relatório técnico em PDF
-│   └── README_Entrega2.md
+├── Proposta/                                  <- Proposta Inicial
+├── Entrega1_FSM_Modelagem/                    <- Marco 1: Máquina de Estados da Cancela (FSM)
+├── Entrega2_Estruturas_Dados/                 <- Marco 2: Fila Encadeada Template & Exceções
+├── Entrega3_Polimorfismo_Tarifas/             <- Marco 3: Polimorfismo Dinâmico & Tarifas
 │
-├── Entrega3_Polimorfismo_Tarifas/             <- Marco 3: Polimorfismo Dinâmico & Tarifas (20%)
-│   ├── include/Veiculo.h, Carro.h, Moto.h, Caminhao.h
-│   ├── src/Veiculo.cpp, Carro.cpp, Moto.cpp, Caminhao.cpp
-│   ├── src/main_entrega3.cpp                  <- Testes de vtable e cálculo tarifário
-│   ├── bin/entrega3.exe                       <- Binário compilado e validado
-│   ├── Relatorio_Entrega3.pdf                 <- Relatório técnico em PDF
-│   └── README_Entrega3.md
+├── EntregaFinal_Sistema_Completo/             <- Marco 4: Sistema Integral Consolidado
+│   ├── include/
+│   │   ├── Estacionamento.h                   <- Orquestrador central (STL, Arquivos, Mutex, HAL)
+│   │   ├── FSM_Controlador.h                  <- Máquina de Estados Finitos
+│   │   ├── FilaEncadeada.h                    <- Classe Template + RAII + Deep Copy
+│   │   ├── UtilitariosTemplate.h              <- Funções Template utilitárias
+│   │   ├── Veiculo.h, Carro.h, Moto.h, Caminhao.h
+│   │   ├── Tiquete.h                          <- Tíquete com carimbo temporal e operator<<
+│   │   ├── RelogioCalendario.h                <- Herança Múltipla (Relogio + Calendario)
+│   │   ├── HardwareHAL.h                      <- Interface abstrata HAL + HardwareSimulado
+│   │   ├── WatchdogCancela.h                  <- Thread de supervisão de timeout (std::thread)
+│   │   └── Excecoes.h                         <- Hierarquia de exceções (std::exception)
+│   ├── src/                                   <- Implementações (.cpp) e suíte de 10 testes + modo --pipe
+│   └── bin/smart_parking.exe                  <- Binário final compilado estaticamente (-static)
 │
-├── EntregaFinal_Sistema_Completo/             <- Marco 4: Sistema Integral Consolidado (40%)
-│   ├── include/Estacionamento.h               <- Classe central orquestradora
-│   ├── include/ (todos os headers integrados)
-│   ├── src/Estacionamento.cpp
-│   ├── src/main.cpp                           <- Bateria completa de testes automatizados e modo pipe
-│   ├── bin/smart_parking.exe                  <- Binário final consolidado
-│   ├── Relatorio_Final_Projeto.pdf            <- Relatório técnico final consolidado
-│   └── README_EntregaFinal.md
-│
-└── Implementacao_Fisica_Hardware/             <- Anexo Prático: Circuito Físico & Embarcados
-    ├── firmware_arduino_cancela.ino           <- Firmware C++ para Arduino/ESP32
-    ├── README.md                              <- Tutorial completo passo a passo (Pinout e Peças BR)
-    ├── Tutorial_Montagem_Hardware.pdf         <- Relatório técnico em PDF com esquema elétrico
-    └── gerar_tutorial_pdf.py
+└── Implementacao_Fisica_Hardware/             <- Anexo Opcional: Firmware Arduino/ESP32 e tutorial
 ```
 
 ---
 
-## 5. Relatórios Técnicos em PDF
+## 4. Como Compilar, Testar e Executar
 
-Cada entrega possui seu respectivo relatório técnico formal gerado em PDF, pronto para entrega no Moodle ou impressão:
+### A. Compilar e Rodar Todos os Testes via `Makefile`
+```bash
+make test
+```
 
-1. **[Proposta_Projeto_Estacionamento.pdf](./Proposta/Proposta_Projeto_Estacionamento.pdf)**: Proposta de desenvolvimento com justificativa de OO, requisitos, EAP e cronograma.
-2. **[Relatorio_Entrega1.pdf](./Entrega1_FSM_Modelagem/Relatorio_Entrega1.pdf)**: Relatório da Entrega 1 (Máquina de estados da cancela, tabela de transições e validação).
-3. **[Relatorio_Entrega2.pdf](./Entrega2_Estruturas_Dados/Relatorio_Entrega2.pdf)**: Relatório da Entrega 2 (Fila encadeada template, RAII, deep copy e tratamento de exceções).
-4. **[Relatorio_Entrega3.pdf](./Entrega3_Polimorfismo_Tarifas/Relatorio_Entrega3.pdf)**: Relatório da Entrega 3 (Hierarquia polimórfica de veículos, despacho por *vtable* e modelo tarifário).
-5. **[Relatorio_Final_Projeto.pdf](./EntregaFinal_Sistema_Completo/Relatorio_Final_Projeto.pdf)**: Documentação técnica final consolidada com a suíte completa de testes de integração.
-6. **[Tutorial_Montagem_Hardware.pdf](./Implementacao_Fisica_Hardware/Tutorial_Montagem_Hardware.pdf)**: Guia completo de prototipagem física com lista de compras no Brasil e esquema pino a pino.
+### B. Compilar Manualmente o Sistema Completo (`g++` C++11)
+No diretório `EntregaFinal_Sistema_Completo`:
+```bash
+g++ -std=c++11 -Wall -Wextra -Wpedantic -O2 -pthread -static \
+    src/FSM_Controlador.cpp src/Veiculo.cpp src/Carro.cpp src/Moto.cpp \
+    src/Caminhao.cpp src/RelogioCalendario.cpp src/Estacionamento.cpp src/main.cpp \
+    -o bin/smart_parking.exe
+./bin/smart_parking.exe
+```
+*(Em Linux/macOS, omita a flag `-static` e a extensão `.exe`.)*
 
----
-
-## 6. Simulador Visual Interativo (Testador Gráfico / Jogo)
-
-Para facilitar a validação, demonstração ao professor e testes visuais com sua dupla, foi criado o script [`simulador_visual.py`](./simulador_visual.py).
-
-### Como Funciona:
-- Trata-se de uma interface gráfica desktop (desenvolvida com `tkinter`, já nativo do Python);
-- O simulador **conecta-se diretamente com o executável C++ compilado (`smart_parking.exe`)** através de um canal IPC via Pipe (`stdin`/`stdout`);
-- **Todo o processamento é executado pelo motor C++**: a máquina de estados (FSM), a alocação de vagas, a fila encadeada e o cálculo tarifário polimórfico;
-- **Recursos Visuais:**
-  - Pátio gráfico com 10 vagas desenhadas (verde quando livres; azul, laranja ou roxo com placas e modelos quando ocupadas);
-  - Animação da cancela física (aberta/fechada) e semáforo com sinal luminoso;
-  - Botões para simular a chegada de Carros, Motos e Caminhões;
-  - Emissão de tíquetes e liberação física de passagem;
-  - Pagamento e desocupação de vagas com emissão de recibo detalhado;
-  - Relógio de simulação acelerável (+15 min, +30 min, +1 hora);
-  - Terminal inferior exibindo em tempo real os comandos trocados com o binário C++.
-
-### Como Executar o Simulador:
+### C. Executar o Simulador Visual Interativo
 ```bash
 python simulador_visual.py
 ```
 
----
-
-## 7. Instruções de Compilação e Execução dos Códigos C++
-
-Todos os programas foram desenvolvidos para compilação com `g++ (GCC)` sob padrão `C++11`:
-
-### A. Executar a Suíte Completa de Testes de Integração (Recomendado):
-```bash
-cd EntregaFinal_Sistema_Completo
-g++ -std=c++11 -Wall src/FSM_Controlador.cpp src/Veiculo.cpp src/Carro.cpp src/Moto.cpp src/Caminhao.cpp src/Estacionamento.cpp src/main.cpp -o bin/smart_parking.exe
-./bin/smart_parking.exe
-```
-
-### B. Compilar e Testar os Módulos Isoladamente:
-
-* **Módulo 1 (FSM):**
-  ```bash
-  cd Entrega1_FSM_Modelagem
-  g++ -std=c++11 -Wall src/FSM_Controlador.cpp src/main_entrega1.cpp -o bin/entrega1.exe
-  ./bin/entrega1.exe
-  ```
-
-* **Módulo 2 (Estruturas Dinâmicas e Templates):**
-  ```bash
-  cd Entrega2_Estruturas_Dados
-  g++ -std=c++11 -Wall src/main_entrega2.cpp -o bin/entrega2.exe
-  ./bin/entrega2.exe
-  ```
-
-* **Módulo 3 (Polimorfismo e Tarifas):**
-  ```bash
-  cd Entrega3_Polimorfismo_Tarifas
-  g++ -std=c++11 -Wall src/Veiculo.cpp src/Carro.cpp src/Moto.cpp src/Caminhao.cpp src/main_entrega3.cpp -o bin/entrega3.exe
-  ./bin/entrega3.exe
-  ```
+### D. Compilar o Relatório Final em LaTeX
+A pasta [`Relatorio_Final_LaTeX/`](./Relatorio_Final_LaTeX/) contém [`main.tex`](./Relatorio_Final_LaTeX/main.tex) e [`references.bib`](./Relatorio_Final_LaTeX/references.bib), prontos para importação direta no **Overleaf** ou compilação local com `pdflatex` + `bibtex`.
 
 ---
 
-## 8. Status e Validação dos Testes
+## 5. Status de Compilação e Testes
 
-| Módulo / Entrega | Compilador | Advertências / Erros | Testes Automatizados | Gerenciamento de Memória |
-| :--- | :---: | :---: | :---: | :---: |
-| **Entrega 1 (FSM)** | `g++ -std=c++11` | 0 erros, 0 warnings | **100% Aprovado** | Seguro |
-| **Entrega 2 (Templates)** | `g++ -std=c++11` | 0 erros, 0 warnings | **100% Aprovado** | Seguro (Deep Copy / RAII) |
-| **Entrega 3 (Polimorfismo)** | `g++ -std=c++11` | 0 erros, 0 warnings | **100% Aprovado** | Seguro (Destrutor Virtual) |
-| **Entrega Final (Integrada)** | `g++ -std=c++11` | 0 erros, 0 warnings | **100% Aprovado** | Zero Memory Leaks |
+| Módulo / Entrega | Compilação (`g++ -std=c++11 -Wall -Wextra -Wpedantic`) | Testes Automatizados |
+| :--- | :---: | :---: |
+| **Entrega 1 (FSM)** | 0 erros, 0 warnings | **5/5 Aprovados (100%)** |
+| **Entrega 2 (Templates e Exceções)** | 0 erros, 0 warnings | **5/5 Aprovados (100%)** |
+| **Entrega 3 (Polimorfismo e Tarifas)** | 0 erros, 0 warnings | **5/5 Aprovados (100%)** |
+| **Entrega Final (Sistema Integrado)** | 0 erros, 0 warnings | **10/10 Suítes Aprovadas (100%)** |
+| **Integração Pipe IPC (`--pipe`)** | Protocolo JSON + HAL validado | **100% Aprovado** |
